@@ -1,9 +1,11 @@
 package motor
 
 import (
-	"errors"
 	"goraspio/digitalio"
-	"math"
+)
+
+const (
+    TOLERANCE = 0.05 // mm
 )
 
 type Motor struct {
@@ -23,21 +25,25 @@ func New(pwmPinNo, freq, directionPinNo int) (Motor, error) {
     return Motor{pwm, direction}, nil
 }
 
-func (m Motor) Write(value float64) error {
-    if value < -1.0 && value > 1.0 {
-        return errors.New("Motor value must be between -1.0 and 1.0") 
-    }
+func (m Motor) Write(reference, position float64) error {
+    // error
+    posError := reference - position
 
-    // direction
-    if math.Signbit(value) { // negative
-        m.direction.Write(digitalio.High)
-    } else {
+    // direction and PWM
+    var err error
+    if posError < TOLERANCE {
         m.direction.Write(digitalio.Low)
+        err = m.pwm.Write(100)
+    } else if posError > TOLERANCE {
+        m.direction.Write(digitalio.High)
+        err = m.pwm.Write(100)
+    } else {
+        err = m.pwm.Write(0)
     }
 
-    // pwm
-    pwmValue := int(math.Abs(value*100))
-    m.pwm.Write(pwmValue)
+    if err != nil {
+        return err
+    }
 
     return nil
 }

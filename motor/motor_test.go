@@ -2,21 +2,11 @@ package motor
 
 import (
     "time"
+    "math"
     "testing"
+    "goraspio/refgen"
 )
 
-func generateSlice(size int) []float64 {
-    if size <= 1 {
-        return []float64{-1} // handle edge case where size is 1 or less
-    }
-
-    slice := make([]float64, size)
-    step := 2.0 / float64(size-1) // calculate the step size
-    for i := 0; i < size; i++ {
-        slice[i] = -1 + step*float64(i)
-    }
-    return slice
-}
 
 func TestMotor(t *testing.T) {
     pwmPinNo := 13
@@ -28,22 +18,29 @@ func TestMotor(t *testing.T) {
     }
     defer motor.Close()
 
-    // slice from -1.0 to 1.0
-    values := generateSlice(200)
+    ref := refgen.NewSine(10/2, 0.04, -math.Pi/2, 10/2)
 
     // ticker
     ticker := time.NewTicker(time.Millisecond * 10)
     defer ticker.Stop()
 
+    // time
+    exeTime := 25
+    dt := 0.01
+    programStartTime := time.Now()
+    timeFromStart := 0.0
+
     // main loop
-    for range 5 {
-        for _, v := range values {
-            <-ticker.C
-            
-            err := motor.Write(v)
-            if err != nil {
-                t.Fatal("couldnt write")
-            }
+    for range int(float64(exeTime)/dt) {
+        <-ticker.C
+
+        reference := ref.Compute(timeFromStart)
+        
+        err := motor.Write(reference, reference-0.1)
+        if err != nil {
+            t.Fatal("couldnt write")
         }
+
+        timeFromStart = time.Since(programStartTime).Seconds()
     }
 }

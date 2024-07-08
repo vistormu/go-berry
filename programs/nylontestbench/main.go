@@ -11,6 +11,7 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+    "math"
 )
 
 type ExeInfo struct {
@@ -19,20 +20,17 @@ type ExeInfo struct {
 }
 
 func main() {
-    // amp := 10.0/2
-    amp := 1.0
-    freq := 0.03
-    // phi := -math.Pi/2
-    phi := 0.0
-    // offset := amp
-    offset := 0.0
+    amp := 10.0/2
+    freq := 0.04
+    phi := -math.Pi/2
+    offset := amp
     sine := refgen.NewSine(amp, freq, phi, offset)
 
     signals := make([]refgen.Signal, 1)
     signals[0] = sine
 
     exeInfo := ExeInfo{
-        exeTime: 67,
+        exeTime: 25,
         dt: 0.01,
     }
 
