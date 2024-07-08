@@ -31,7 +31,7 @@ func TestMain(t *testing.T) {
     signals = append(signals, []Signal{sin1, sin2})
 
     // client
-    c, err := client.New("localhost", 8080)
+    c, err := client.New("10.118.90.193", 8080)
     if err != nil {
         t.Fatal(err.Error())
     }

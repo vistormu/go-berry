@@ -4,7 +4,7 @@ import (
     "fmt"
     "time"
     "testing"
-    "selfsensing/digitalio"
+    "goraspio/digitalio"
 )
 
 func TestHallSensorSpi(t *testing.T) {
@@ -14,7 +14,7 @@ func TestHallSensorSpi(t *testing.T) {
     }
     defer hs.Close()
 
-    m, err := digitalio.NewPwm(13, 500)
+    m, err := digitalio.NewPwm(13, 2_000)
     if err != nil {
         t.Fatal(err)
     }
@@ -53,7 +53,7 @@ func TestHallSensorSpi(t *testing.T) {
                 t.Fatal(err)
             }
 
-            fmt.Printf("%*d\n", 10, position)
+            fmt.Printf("%f\n", position)
         }
     }
 }
