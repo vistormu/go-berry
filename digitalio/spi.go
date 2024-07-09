@@ -15,7 +15,7 @@ func NewSpi(chipSelectPinNo int) (Spi, error) {
         return Spi{}, err
     }
     rpio.SpiMode(0, 1)
-    rpio.SpiSpeed(500_000)
+    rpio.SpiSpeed(1_000_000)
 
     do := NewDigitalOut(chipSelectPinNo, High)
 

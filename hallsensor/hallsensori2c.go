@@ -48,10 +48,10 @@ func (hs *HallSensorI2C) read() (int, error) {
     return value, nil
 }
 
-func (hs *HallSensorI2C) Read() (int, error) {
+func (hs *HallSensorI2C) Read() (float64, error) {
     data, err := hs.read()
     if err != nil {
-        return data, err
+        return -1, err
     }
 
     diff := float64(data - hs.prevData)
@@ -66,7 +66,7 @@ func (hs *HallSensorI2C) Read() (int, error) {
     hs.prevData = data
     output := data - hs.offset + hs.resetCount * (MAX_VALUE + 1)
 
-    return -output, nil
+    return -float64(output)*STEP_TO_MM, nil
 }
 
 func (hs *HallSensorI2C) Close() {

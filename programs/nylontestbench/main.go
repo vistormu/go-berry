@@ -20,7 +20,7 @@ type ExeInfo struct {
 }
 
 func main() {
-    amp := 10.0/2
+    amp := 20.0/2
     freq := 0.04
     phi := -math.Pi/2
     offset := amp
@@ -43,7 +43,7 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) {
     // ==========
     // Motor
     pwmPinNo := 13
-    freq := 2_000
+    freq := 10_000
     dirPinNo := 6
     motor, err := motor.New(pwmPinNo, freq, dirPinNo)
     if err != nil {
@@ -63,7 +63,7 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) {
     fmt.Println("voltage sensor connected successfully")
 
     // Hall Sensor
-    hs, err := hallsensor.NewSpi(24)
+    hs, err := hallsensor.NewI2C(0x40, 1)
     if err != nil {
         panic(err)
     }
@@ -118,26 +118,31 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) {
         }
         position, err := hs.Read()
         if err != nil {
-            panic(err)
+            fmt.Println("WARNING: I2C failed reading")
+            // panic(err)
         }
 
         // REFERENCE
-        ref := rg.Compute(timeFromStart)
+        ref := rg.Compute(time.Since(programStartTime).Seconds())
+
+        // ERROR
+        posError := ref - position
 
         // ACTUATE
-        err = motor.Write(float64(ref))
+        pwmValue, err := motor.Write(posError)
         if err != nil {
             panic(err)
         }
 
         // SEND
-        data["time"] = timeFromStart
+        data["time"] = time.Since(programStartTime).Seconds()
 
-        data["control"] = ref
+        data["control"] = pwmValue
 
         data["voltage"] = voltage
         data["filtered_voltage"] = filteredVoltage
 
+        data["reference"] = ref
         data["position"] = position
 
         err = c.Send(data)

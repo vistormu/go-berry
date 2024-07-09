@@ -75,7 +75,7 @@ func TestHallSensorI2C(t *testing.T) {
         <-ticker.C
         position, err := hs.Read()
         if err != nil {
-            t.Fatal("wrong lecture")
+            t.Fatal(err)
         }
 
         fmt.Printf("\n\nPosition: %d\n\n", position)

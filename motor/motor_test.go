@@ -1,10 +1,11 @@
 package motor
 
 import (
-    "time"
-    "math"
-    "testing"
-    "goraspio/refgen"
+	"goraspio/digitalio"
+	"goraspio/refgen"
+	"math"
+	"testing"
+	"time"
 )
 
 
@@ -34,13 +35,94 @@ func TestMotor(t *testing.T) {
     for range int(float64(exeTime)/dt) {
         <-ticker.C
 
-        reference := ref.Compute(timeFromStart)
+        ref.Compute(timeFromStart)
         
-        err := motor.Write(reference, reference-0.1)
+        _, err := motor.Write(0.0)
         if err != nil {
             t.Fatal("couldnt write")
         }
 
         timeFromStart = time.Since(programStartTime).Seconds()
+    }
+}
+
+func TestMotorOpenLoop(t *testing.T) {
+    pwmPinNo := 13
+    freq := 2_000
+    directionPinNo := 6
+    motor, err := New(pwmPinNo, freq, directionPinNo)
+    if err != nil {
+        t.Fatal(err)
+    }
+    defer motor.Close()
+
+    ref := refgen.NewSine(100, 0.04, -math.Pi/2, 0)
+
+    // ticker
+    ticker := time.NewTicker(time.Millisecond * 10)
+    defer ticker.Stop()
+
+    // time
+    exeTime := 25
+    dt := 0.01
+    programStartTime := time.Now()
+    timeFromStart := 0.0
+
+    // main loop
+    for range int(float64(exeTime)/dt) {
+        <-ticker.C
+
+        reference := ref.Compute(timeFromStart)
+
+        if reference < 0 {
+            motor.direction.Write(digitalio.High)
+        } else {
+            motor.direction.Write(digitalio.Low)
+        }
+
+        err := motor.pwm.Write(int(math.Abs(reference)))
+        if err != nil {
+            t.Fatal(err)
+        }
+
+        timeFromStart = time.Since(programStartTime).Seconds()
+    }
+}
+
+func TestMotorMove(t *testing.T) {
+    pwmPinNo := 13
+    freq := 10_000
+    directionPinNo := 6
+    motor, err := New(pwmPinNo, freq, directionPinNo)
+    if err != nil {
+        t.Fatal(err)
+    }
+    defer motor.Close()
+
+    mov := true // right
+    // mov := false // left
+
+    // ticker
+    ticker := time.NewTicker(time.Millisecond * 10)
+    defer ticker.Stop()
+
+    // time
+    exeTime := 5
+    dt := 0.01
+
+    // main loop
+    for range int(float64(exeTime)/dt) {
+        <-ticker.C
+
+        if mov {
+            motor.direction.Write(digitalio.Low)
+        } else {
+            motor.direction.Write(digitalio.High)
+        }
+
+        err := motor.pwm.Write(100)
+        if err != nil {
+            t.Fatal(err)
+        }
     }
 }

@@ -25,27 +25,25 @@ func New(pwmPinNo, freq, directionPinNo int) (Motor, error) {
     return Motor{pwm, direction}, nil
 }
 
-func (m Motor) Write(reference, position float64) error {
-    // error
-    posError := reference - position
-
+func (m Motor) Write(posError float64) (int, error) {
     // direction and PWM
-    var err error
-    if posError < TOLERANCE {
-        m.direction.Write(digitalio.Low)
-        err = m.pwm.Write(100)
-    } else if posError > TOLERANCE {
+    pwmValue := 0
+    if posError < -TOLERANCE {
         m.direction.Write(digitalio.High)
-        err = m.pwm.Write(100)
+        pwmValue = 100
+    } else if posError > TOLERANCE {
+        m.direction.Write(digitalio.Low)
+        pwmValue = 100
     } else {
-        err = m.pwm.Write(0)
+        pwmValue = 0
     }
 
+    err := m.pwm.Write(pwmValue)
     if err != nil {
-        return err
+        return 0, err
     }
 
-    return nil
+    return pwmValue, nil
 }
 
 func (m Motor) Close() {

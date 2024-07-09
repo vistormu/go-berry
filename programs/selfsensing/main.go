@@ -91,7 +91,8 @@ func exe(signals []refgen.Signal, modelInfo ModelInfo, exeInfo ExeInfo) {
     fmt.Println("hall sensor connected successfully")
 
     // Client
-    ip := "163.117.150.172"
+    // ip := "163.117.150.172"
+    ip := "10.118.90.193"
     port := 8080
     c, err := client.New(ip, port)
     if err != nil {
@@ -111,9 +112,6 @@ func exe(signals []refgen.Signal, modelInfo ModelInfo, exeInfo ExeInfo) {
 
     // Reference generator
     rg := refgen.NewRefGen(signals)
-    if err != nil {
-        panic(err)
-    }
 
     // model
     m, err := model.New(modelInfo.modelType, modelInfo.contextLength)
@@ -138,7 +136,7 @@ func exe(signals []refgen.Signal, modelInfo ModelInfo, exeInfo ExeInfo) {
     data := make(map[string]any)
     modelInput := utils.NewWindow(modelInfo.contextLength)
     
-    var prevRef float32 = 0.0
+    prevRef := 0.0
 
     // =========
     // MAIN LOOP
@@ -175,7 +173,7 @@ func exe(signals []refgen.Signal, modelInfo ModelInfo, exeInfo ExeInfo) {
         ref := rg.Compute(timeFromStart)
 
         // CONTROL
-        error := ref - float32(position)
+        error := float32(ref) - float32(position)
         
         masterControl := 0
         slaveControl := 0

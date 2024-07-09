@@ -5,10 +5,6 @@ import (
     "goraspio/digitalio"
 )
 
-const (
-    STEP_TO_MM = 0.000488
-)
-
 type HallSensorSpi struct {
     spi digitalio.Spi 
     offset int
@@ -62,7 +58,7 @@ func (hs *HallSensorSpi) Read() (float64, error) {
     hs.prevData = data
     output := data - hs.offset + hs.resetCount * (MAX_VALUE + 1)
 
-    return float64(output)*STEP_TO_MM, nil
+    return -float64(output)*STEP_TO_MM, nil
 }
 
 func (hs *HallSensorSpi) Close() {
