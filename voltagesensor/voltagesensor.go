@@ -18,8 +18,8 @@ func New(vRef float32, chipSelectPinNo int) (*VoltageSensor, error) {
         return nil, err
     }
     
-    var processVariance float32 = 0.01
-    var measurementVariance float32 = 0.1
+    var processVariance float32 = 0.1
+    var measurementVariance float32 = 20
     var initialErrorCovariance float32 = 1.0
     kf := utils.NewKalmanFilter(
         processVariance,

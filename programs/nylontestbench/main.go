@@ -2,16 +2,19 @@ package main
 
 import (
 	"fmt"
-	"goraspio/client"
-	"goraspio/hallsensor"
-	"goraspio/motor"
-	"goraspio/refgen"
-	"goraspio/voltagesensor"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
     "math"
+    
+    "goraspio/digitalio"
+	"goraspio/client"
+	"goraspio/hallsensor"
+	"goraspio/motor"
+	"goraspio/refgen"
+	"goraspio/voltagesensor"
+    "goraspio/loadcell"
 )
 
 type ExeInfo struct {
@@ -20,21 +23,34 @@ type ExeInfo struct {
 }
 
 func main() {
-    amp := 20.0/2
-    freq := 0.04
-    phi := -math.Pi/2
-    offset := amp
-    sine := refgen.NewSine(amp, freq, phi, offset)
-
-    signals := make([]refgen.Signal, 1)
-    signals[0] = sine
+    // phi := -math.Pi/2
+    signals := []refgen.Signal{
+        // refgen.NewSine(20.0/2, 0.02, phi, 20.0/2), // sin 20mHz 0-20mm
+        // refgen.NewSine(20.0/2, 0.03, phi, 20.0/2), // sin 30 0-20
+        // refgen.NewSine(20.0/2, 0.04, phi, 20.0/2), // sin 40 0-20
+        // refgen.NewSine(10.0/2, 0.02, phi, 10.0/2), // sin 20 0-10
+        // refgen.NewSine(10.0/2, 0.03, phi, 10.0/2), // sin 30 0-10
+        // refgen.NewSine(10.0/2, 0.04, phi, 10.0/2), // sin 40 0-10
+        // refgen.NewSine(5.0/2, 0.02, phi, 5.0/2), // sin 20 0-5
+        // refgen.NewSine(5.0/2, 0.03, phi, 5.0/2), // sin 30 0-5
+        // refgen.NewSine(5.0/2, 0.04, phi, 5.0/2), // sin 40 0-5
+        // refgen.NewSine(15.0/2, 0.02, phi, 15.0/2), // sin 20 0-15
+        // refgen.NewSine(15.0/2, 0.03, phi, 15.0/2), // sin 30 0-15
+        // refgen.NewSine(15.0/2, 0.04, phi, 15.0/2), // sin 40 0-15
+    }
 
     exeInfo := ExeInfo{
-        exeTime: 25,
+        exeTime: 5*60,
         dt: 0.01,
     }
 
-    exe(signals, exeInfo)
+    var loadRef float32 = 0.15
+
+    for _, s := range signals {
+        calibrate(loadRef)
+        exe([]refgen.Signal{s}, exeInfo)
+        time.Sleep(time.Second*10)
+    }
 }
 
 func exe(signals []refgen.Signal, exeInfo ExeInfo) {
@@ -43,14 +59,13 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) {
     // ==========
     // Motor
     pwmPinNo := 13
-    freq := 10_000
+    freq := 4_500
     dirPinNo := 6
     motor, err := motor.New(pwmPinNo, freq, dirPinNo)
     if err != nil {
         panic(err)
     }
     defer motor.Close()
-    fmt.Println("motor connected successfully")
 
     // Voltage Sensor
     var vRef float32 = 5.0
@@ -60,7 +75,6 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) {
         panic(err)
     }
     defer vs.Close()
-    fmt.Println("voltage sensor connected successfully")
 
     // Hall Sensor
     hs, err := hallsensor.NewI2C(0x40, 1)
@@ -68,7 +82,13 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) {
         panic(err)
     }
     defer hs.Close()
-    fmt.Println("hall sensor connected successfully")
+
+    // Load cell
+    lc, err := loadcell.New(24)
+    if err != nil {
+        panic(err)
+    }
+    defer lc.Close()
 
     // Client
     ip := "10.118.90.193"
@@ -78,7 +98,6 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) {
         panic(err)
     }
     defer c.Close()
-    fmt.Println("client connected successfully")
 
     // Reference generator
     rg := refgen.NewRefGen(signals)
@@ -96,6 +115,7 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) {
     // VARIABLES
     // =========
     data := make(map[string]any)
+    prevPositionValue := 0.0
 
     // =========
     // MAIN LOOP
@@ -118,8 +138,14 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) {
         }
         position, err := hs.Read()
         if err != nil {
-            fmt.Println("WARNING: I2C failed reading")
-            // panic(err)
+            position = prevPositionValue
+        }
+        if position != -1 {
+            prevPositionValue = position
+        }
+        load, filteredLoad, err := lc.Read()
+        if err != nil {
+            panic(err)
         }
 
         // REFERENCE
@@ -129,7 +155,7 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) {
         posError := ref - position
 
         // ACTUATE
-        pwmValue, err := motor.Write(posError)
+        _, err = motor.Write(posError, exeInfo.dt)
         if err != nil {
             panic(err)
         }
@@ -137,7 +163,8 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) {
         // SEND
         data["time"] = time.Since(programStartTime).Seconds()
 
-        data["control"] = pwmValue
+        data["load"] = load
+        data["filtered_load"] = filteredLoad
 
         data["voltage"] = voltage
         data["filtered_voltage"] = filteredVoltage
@@ -158,4 +185,69 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) {
         fmt.Printf("\rTime: %.3f ms / %.3f s | Position: %.3f mm", timePerIteration, timeFromStart, position)
     }}
     fmt.Println("\nProgram finalized")
+}
+
+
+func calibrate(loadRef float32) {
+    // Motor
+    pwmPinNo := 13
+    freq := 500
+    dirPinNo := 6
+    motor, err := motor.New(pwmPinNo, freq, dirPinNo)
+    if err != nil {
+        panic(err)
+    }
+    defer motor.Close()
+
+    // Load cell
+    lc, err := loadcell.New(24)
+    if err != nil {
+        panic(err)
+    }
+    defer lc.Close()
+
+    // time
+    ticker := time.NewTicker(time.Millisecond*10)
+    defer ticker.Stop()
+
+    programStartTime := time.Now()
+
+    // variables
+    directionSet := false
+    direction := digitalio.Low
+
+    for {
+        <-ticker.C
+
+        if time.Since(programStartTime).Seconds() > 20 {
+            break
+        }
+
+        // read
+        _, load, err := lc.Read()
+        if err != nil {
+            panic(err)
+        }
+        fmt.Printf("\r%.4f", load)
+
+        // check initial direction
+        if load < loadRef && !directionSet { // positive
+            direction = digitalio.Low
+            directionSet = true
+        } else if load > loadRef && !directionSet {
+            direction = digitalio.High // left
+            directionSet = true
+        }
+
+        // move motor
+        if load >= loadRef && direction == digitalio.Low { // load went right and surpassed the ref
+            break
+        }
+        if load <= loadRef && direction == digitalio.High { // load went left and surpasses the ref
+            break
+        }
+
+        // motor
+        err = motor.WriteRaw(100, direction)
+    }
 }

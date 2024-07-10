@@ -4,7 +4,7 @@ import (
     "goraspio/utils"
 )
 
-type PID struct {
+type Pid struct {
     kp, ki, kd float32
     alpha float32
     prevError float32
@@ -13,11 +13,11 @@ type PID struct {
     integralBounds [2]float32
 }
 
-func NewPID(kp, ki, kd, alpha float32, integralBounds [2]float32) *PID {
-    return &PID{kp, ki, kd, alpha, 0, 0, 0, integralBounds}
+func NewPid(kp, ki, kd, alpha float32, integralBounds [2]float32) *Pid {
+    return &Pid{kp, ki, kd, alpha, 0, 0, 0, integralBounds}
 }
 
-func (p *PID) Compute(err, dt float32) float32 {
+func (p *Pid) Compute(err, dt float32) float32 {
     p.integral += err * dt
     p.integral = utils.Clip(p.integral, p.integralBounds[0], p.integralBounds[1])
 
@@ -28,5 +28,5 @@ func (p *PID) Compute(err, dt float32) float32 {
 
     p.prevError = err
 
-    return utils.Clip(output, 0, 100)
+    return output
 }

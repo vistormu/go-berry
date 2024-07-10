@@ -1,7 +1,10 @@
 package motor
 
 import (
+    "math"
 	"goraspio/digitalio"
+    "goraspio/controller"
+    "goraspio/utils"
 )
 
 const (
@@ -11,39 +14,58 @@ const (
 type Motor struct {
     pwm digitalio.Pwm
     direction digitalio.DigitalOut
+    pid *controller.Pid
 }
 
 
 func New(pwmPinNo, freq, directionPinNo int) (Motor, error) {
+    // pwm
     pwm, err := digitalio.NewPwm(pwmPinNo, freq)
     if err != nil {
         return Motor{}, err
     }
-
+    
+    // direction
     direction := digitalio.NewDigitalOut(directionPinNo, digitalio.Low)
 
-    return Motor{pwm, direction}, nil
+    // pid
+    pid := controller.NewPid(50, 0, 0.0, 0.0, [2]float32{-1, 1})
+
+    return Motor{pwm, direction, pid}, nil
 }
 
-func (m Motor) Write(posError float64) (int, error) {
-    // direction and PWM
-    pwmValue := 0
-    if posError < -TOLERANCE {
-        m.direction.Write(digitalio.High)
-        pwmValue = 100
-    } else if posError > TOLERANCE {
-        m.direction.Write(digitalio.Low)
-        pwmValue = 100
+func (m Motor) Write(posError float64, dt float64) (int, error) {
+    // pwm value
+    pwmValue := m.pid.Compute(float32(posError), float32(dt))
+    pwmValue = utils.Clip(pwmValue, -100, 100)
+
+    sign := math.Signbit(float64(pwmValue))
+    value := float32(math.Abs(float64(pwmValue)))
+
+    // direction
+    if sign {
+        m.direction.Write(digitalio.High) // negative error
     } else {
-        pwmValue = 0
+        m.direction.Write(digitalio.Low) // positive error
     }
 
-    err := m.pwm.Write(pwmValue)
+    // write
+    err := m.pwm.Write(int(value))
     if err != nil {
         return 0, err
     }
 
-    return pwmValue, nil
+    return int(pwmValue), nil
+}
+
+func (m Motor) WriteRaw(pwmValue int, direction digitalio.PinState) error {
+    m.direction.Write(direction)
+    err := m.pwm.Write(pwmValue)
+    if err != nil {
+        return err
+    }
+
+    return nil
 }
 
 func (m Motor) Close() {

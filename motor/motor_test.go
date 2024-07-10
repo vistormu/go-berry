@@ -1,7 +1,9 @@
 package motor
 
 import (
+	"fmt"
 	"goraspio/digitalio"
+	"goraspio/hallsensor"
 	"goraspio/refgen"
 	"math"
 	"testing"
@@ -9,7 +11,15 @@ import (
 )
 
 
-func TestMotor(t *testing.T) {
+func TestMotorClosedLoop(t *testing.T) {
+    // hall sensor
+    hs, err := hallsensor.NewI2C(0x40, 1)
+    if err != nil {
+        panic(err)
+    }
+    defer hs.Close()
+
+    // motor
     pwmPinNo := 13
     freq := 2_000
     directionPinNo := 6
@@ -18,8 +28,11 @@ func TestMotor(t *testing.T) {
         t.Fatal(err)
     }
     defer motor.Close()
+    
+    // refgen
+    sine := refgen.NewSine(10/2, 0.04, -math.Pi/2, 10/2)
 
-    ref := refgen.NewSine(10/2, 0.04, -math.Pi/2, 10/2)
+    rg := refgen.NewRefGen([]refgen.Signal{sine})
 
     // ticker
     ticker := time.NewTicker(time.Millisecond * 10)
@@ -34,15 +47,27 @@ func TestMotor(t *testing.T) {
     // main loop
     for range int(float64(exeTime)/dt) {
         <-ticker.C
-
-        ref.Compute(timeFromStart)
         
-        _, err := motor.Write(0.0)
+        // reference
+        ref := rg.Compute(timeFromStart)
+
+        // position
+        position, err := hs.Read()
         if err != nil {
-            t.Fatal("couldnt write")
+            fmt.Println("Hall sensor failed reading")
+        }
+
+        // error
+        posError := ref - position
+        
+        pwmValue, err := motor.Write(posError, dt)
+        if err != nil {
+            t.Fatal(err)
         }
 
         timeFromStart = time.Since(programStartTime).Seconds()
+
+        fmt.Printf("\rPosition: %.3f | Reference: %.3f | PWM: %d", position, ref, pwmValue)
     }
 }
 
@@ -99,8 +124,8 @@ func TestMotorMove(t *testing.T) {
     }
     defer motor.Close()
 
-    mov := true // right
-    // mov := false // left
+    // mov := true // right
+    mov := false // left
 
     // ticker
     ticker := time.NewTicker(time.Millisecond * 10)
