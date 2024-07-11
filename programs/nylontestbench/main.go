@@ -23,20 +23,113 @@ type ExeInfo struct {
 }
 
 func main() {
-    // phi := -math.Pi/2
+    phi := -math.Pi/2
     signals := []refgen.Signal{
-        // refgen.NewSine(20.0/2, 0.02, phi, 20.0/2), // sin 20mHz 0-20mm
-        // refgen.NewSine(20.0/2, 0.03, phi, 20.0/2), // sin 30 0-20
-        // refgen.NewSine(20.0/2, 0.04, phi, 20.0/2), // sin 40 0-20
-        // refgen.NewSine(10.0/2, 0.02, phi, 10.0/2), // sin 20 0-10
-        // refgen.NewSine(10.0/2, 0.03, phi, 10.0/2), // sin 30 0-10
-        // refgen.NewSine(10.0/2, 0.04, phi, 10.0/2), // sin 40 0-10
-        // refgen.NewSine(5.0/2, 0.02, phi, 5.0/2), // sin 20 0-5
-        // refgen.NewSine(5.0/2, 0.03, phi, 5.0/2), // sin 30 0-5
-        // refgen.NewSine(5.0/2, 0.04, phi, 5.0/2), // sin 40 0-5
-        // refgen.NewSine(15.0/2, 0.02, phi, 15.0/2), // sin 20 0-15
-        // refgen.NewSine(15.0/2, 0.03, phi, 15.0/2), // sin 30 0-15
-        // refgen.NewSine(15.0/2, 0.04, phi, 15.0/2), // sin 40 0-15
+        // ===
+        // SIN
+        // ===
+        // 00-20mm
+        refgen.NewSine(20.0/2, 0.02, phi, 20.0/2), // 20mHz
+        refgen.NewSine(20.0/2, 0.03, phi, 20.0/2), // 30mHz
+        refgen.NewSine(20.0/2, 0.04, phi, 20.0/2), // 40mHz
+
+        // 00-15mm
+        refgen.NewSine(15.0/2, 0.02, phi, 15.0/2), // 20mHz
+        refgen.NewSine(15.0/2, 0.03, phi, 15.0/2), // 30mHz
+        refgen.NewSine(15.0/2, 0.04, phi, 15.0/2), // 40mHz
+
+        // 00-10mm
+        refgen.NewSine(10.0/2, 0.02, phi, 10.0/2), // 20mHz
+        refgen.NewSine(10.0/2, 0.03, phi, 10.0/2), // 30mHz
+        refgen.NewSine(10.0/2, 0.04, phi, 10.0/2), // 40mHz
+
+        // 00-05mm
+        refgen.NewSine(5.0/2, 0.02, phi, 5.0/2), // 20mHz
+        refgen.NewSine(5.0/2, 0.03, phi, 5.0/2), // 30mHz
+        refgen.NewSine(5.0/2, 0.04, phi, 5.0/2), // 40mHz
+
+        // 05-10mm
+        refgen.NewSine(5.0/2, 0.02, phi, 5.0/2+5.0), // 20mHz
+        refgen.NewSine(5.0/2, 0.03, phi, 5.0/2+5.0), // 30mHz
+        refgen.NewSine(5.0/2, 0.04, phi, 5.0/2+5.0), // 40mHz
+
+        // 05-15mm
+        refgen.NewSine(10.0/2, 0.02, phi, 10.0/2+5.0), // 20mHz
+        refgen.NewSine(10.0/2, 0.03, phi, 10.0/2+5.0), // 30mHz
+        refgen.NewSine(10.0/2, 0.04, phi, 10.0/2+5.0), // 40mHz
+
+        // 05-20mm
+        refgen.NewSine(15.0/2, 0.02, phi, 15.0/2+5.0), // 20mHz
+        refgen.NewSine(15.0/2, 0.03, phi, 15.0/2+5.0), // 30mHz
+        refgen.NewSine(15.0/2, 0.04, phi, 15.0/2+5.0), // 40mHz
+
+        // 10-15mm
+        refgen.NewSine(5.0/2, 0.02, phi, 5.0/2+10.0), // 20mHz
+        refgen.NewSine(5.0/2, 0.03, phi, 5.0/2+10.0), // 30mHz
+        refgen.NewSine(5.0/2, 0.04, phi, 5.0/2+10.0), // 40mHz
+
+        // 10-20mm
+        refgen.NewSine(10.0/2, 0.02, phi, 10.0/2+10.0), // 20mHz
+        refgen.NewSine(10.0/2, 0.03, phi, 10.0/2+10.0), // 30mHz
+        refgen.NewSine(10.0/2, 0.04, phi, 10.0/2+10.0), // 40mHz
+
+        // 15-20mm
+        refgen.NewSine(5.0/2, 0.02, phi, 5.0/2+15.0), // 20mHz
+        refgen.NewSine(5.0/2, 0.03, phi, 5.0/2+15.0), // 30mHz
+        refgen.NewSine(5.0/2, 0.04, phi, 5.0/2+15.0), // 40mHz
+
+        // ===
+        // TRI
+        // ===
+        // 00-20mm
+        refgen.NewTriangular(20.0/2, 0.02, phi, 20.0/2), // 20mHz
+        refgen.NewTriangular(20.0/2, 0.03, phi, 20.0/2), // 30mHz
+        refgen.NewTriangular(20.0/2, 0.04, phi, 20.0/2), // 40mHz
+
+        // 00-15mm
+        refgen.NewTriangular(15.0/2, 0.02, phi, 15.0/2), // 20mHz
+        refgen.NewTriangular(15.0/2, 0.03, phi, 15.0/2), // 30mHz
+        refgen.NewTriangular(15.0/2, 0.04, phi, 15.0/2), // 40mHz
+
+        // 00-10mm
+        refgen.NewTriangular(10.0/2, 0.02, phi, 10.0/2), // 20mHz
+        refgen.NewTriangular(10.0/2, 0.03, phi, 10.0/2), // 30mHz
+        refgen.NewTriangular(10.0/2, 0.04, phi, 10.0/2), // 40mHz
+
+        // 00-05mm
+        refgen.NewTriangular(5.0/2, 0.02, phi, 5.0/2), // 20mHz
+        refgen.NewTriangular(5.0/2, 0.03, phi, 5.0/2), // 30mHz
+        refgen.NewTriangular(5.0/2, 0.04, phi, 5.0/2), // 40mHz
+
+        // 05-10mm
+        refgen.NewTriangular(5.0/2, 0.02, phi, 5.0/2+5.0), // 20mHz
+        refgen.NewTriangular(5.0/2, 0.03, phi, 5.0/2+5.0), // 30mHz
+        refgen.NewTriangular(5.0/2, 0.04, phi, 5.0/2+5.0), // 40mHz
+
+        // 05-15mm
+        refgen.NewTriangular(10.0/2, 0.02, phi, 10.0/2+5.0), // 20mHz
+        refgen.NewTriangular(10.0/2, 0.03, phi, 10.0/2+5.0), // 30mHz
+        refgen.NewTriangular(10.0/2, 0.04, phi, 10.0/2+5.0), // 40mHz
+
+        // 05-20mm
+        refgen.NewTriangular(15.0/2, 0.02, phi, 15.0/2+5.0), // 20mHz
+        refgen.NewTriangular(15.0/2, 0.03, phi, 15.0/2+5.0), // 30mHz
+        refgen.NewTriangular(15.0/2, 0.04, phi, 15.0/2+5.0), // 40mHz
+
+        // 10-15mm
+        refgen.NewTriangular(5.0/2, 0.02, phi, 5.0/2+10.0), // 20mHz
+        refgen.NewTriangular(5.0/2, 0.03, phi, 5.0/2+10.0), // 30mHz
+        refgen.NewTriangular(5.0/2, 0.04, phi, 5.0/2+10.0), // 40mHz
+
+        // 10-20mm
+        refgen.NewTriangular(10.0/2, 0.02, phi, 10.0/2+10.0), // 20mHz
+        refgen.NewTriangular(10.0/2, 0.03, phi, 10.0/2+10.0), // 30mHz
+        refgen.NewTriangular(10.0/2, 0.04, phi, 10.0/2+10.0), // 40mHz
+
+        // 15-20mm
+        refgen.NewTriangular(5.0/2, 0.02, phi, 5.0/2+15.0), // 20mHz
+        refgen.NewTriangular(5.0/2, 0.03, phi, 5.0/2+15.0), // 30mHz
+        refgen.NewTriangular(5.0/2, 0.04, phi, 5.0/2+15.0), // 40mHz
     }
 
     exeInfo := ExeInfo{
@@ -44,16 +137,31 @@ func main() {
         dt: 0.01,
     }
 
-    var loadRef float32 = 0.15
+    var loadRef float32 = 0.1
 
-    for _, s := range signals {
-        calibrate(loadRef)
-        exe([]refgen.Signal{s}, exeInfo)
-        time.Sleep(time.Second*10)
+    for i, s := range signals {
+        // calibration
+        release()
+        calibrated := calibrate(loadRef)
+        if !calibrated {
+            fmt.Println("Error calibrating")
+            break
+        }
+        
+        // experiment
+        finalized := exe([]refgen.Signal{s}, exeInfo)
+        if !finalized {
+            break
+        }
+
+        // wait for next experiment
+        if i != len(signals) - 1 {
+            time.Sleep(time.Second*10)
+        } 
     }
 }
 
-func exe(signals []refgen.Signal, exeInfo ExeInfo) {
+func exe(signals []refgen.Signal, exeInfo ExeInfo) bool {
     // ==========
     // COMPONENTS
     // ==========
@@ -126,8 +234,8 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) {
     for range int(float64(exeInfo.exeTime)/exeInfo.dt) {
     select {
     case <- quit:
-        fmt.Println("\nexiting")
-        return
+        fmt.Println("\n\nKeyboard interrupt")
+        return false
     case <-ticker.C:
         loopStartTime := time.Now()
 
@@ -184,14 +292,16 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) {
         // PRINT
         fmt.Printf("\rTime: %.3f ms / %.3f s | Position: %.3f mm", timePerIteration, timeFromStart, position)
     }}
-    fmt.Println("\nProgram finalized")
+    fmt.Println("\n\nExperiment finalized")
+
+    return true
 }
 
 
-func calibrate(loadRef float32) {
+func release() {
     // Motor
     pwmPinNo := 13
-    freq := 500
+    freq := 2_000
     dirPinNo := 6
     motor, err := motor.New(pwmPinNo, freq, dirPinNo)
     if err != nil {
@@ -212,42 +322,78 @@ func calibrate(loadRef float32) {
 
     programStartTime := time.Now()
 
-    // variables
-    directionSet := false
-    direction := digitalio.Low
+    fmt.Println("Releasing wire")
 
     for {
         <-ticker.C
 
-        if time.Since(programStartTime).Seconds() > 20 {
-            break
+        if time.Since(programStartTime).Seconds() > 5 {
+            return
         }
 
         // read
-        _, load, err := lc.Read()
+        load, _, err := lc.Read()
         if err != nil {
             panic(err)
         }
         fmt.Printf("\r%.4f", load)
 
-        // check initial direction
-        if load < loadRef && !directionSet { // positive
-            direction = digitalio.Low
-            directionSet = true
-        } else if load > loadRef && !directionSet {
-            direction = digitalio.High // left
-            directionSet = true
-        }
-
-        // move motor
-        if load >= loadRef && direction == digitalio.Low { // load went right and surpassed the ref
-            break
-        }
-        if load <= loadRef && direction == digitalio.High { // load went left and surpasses the ref
-            break
+        if math.Abs(float64(load)) < 0.01 {
+            return
         }
 
         // motor
-        err = motor.WriteRaw(100, direction)
+        err = motor.WriteRaw(100, digitalio.High)
+    }
+}
+
+
+func calibrate(loadRef float32) bool {
+    // Motor
+    pwmPinNo := 13
+    freq := 500
+    dirPinNo := 6
+    motor, err := motor.New(pwmPinNo, freq, dirPinNo)
+    if err != nil {
+        panic(err)
+    }
+    defer motor.Close()
+
+    // Load cell
+    lc, err := loadcell.New(24)
+    if err != nil {
+        panic(err)
+    }
+    defer lc.Close()
+
+    // time
+    ticker := time.NewTicker(time.Millisecond*100)
+    defer ticker.Stop()
+
+    programStartTime := time.Now()
+
+    fmt.Println("Calibrating wire")
+
+    for {
+        <-ticker.C
+
+        if time.Since(programStartTime).Seconds() > 40 {
+            return false
+        }
+
+        // read
+        load, _, err := lc.Read()
+        if err != nil {
+            panic(err)
+        }
+        fmt.Printf("\r%.4f", load)
+
+        if load >= loadRef {
+            fmt.Println()
+            return true
+        }
+
+        // motor
+        err = motor.WriteRaw(100, digitalio.Low)
     }
 }
