@@ -28,52 +28,52 @@ func main() {
         // ===
         // SIN
         // ===
-        // 00-20mm
+        // 00-20%
         refgen.NewSine(20.0/2, 0.02, phi, 20.0/2), // 20mHz
         refgen.NewSine(20.0/2, 0.03, phi, 20.0/2), // 30mHz
         refgen.NewSine(20.0/2, 0.04, phi, 20.0/2), // 40mHz
 
-        // 00-15mm
+        // 00-15%
         refgen.NewSine(15.0/2, 0.02, phi, 15.0/2), // 20mHz
         refgen.NewSine(15.0/2, 0.03, phi, 15.0/2), // 30mHz
         refgen.NewSine(15.0/2, 0.04, phi, 15.0/2), // 40mHz
 
-        // 00-10mm
+        // 00-10%
         refgen.NewSine(10.0/2, 0.02, phi, 10.0/2), // 20mHz
         refgen.NewSine(10.0/2, 0.03, phi, 10.0/2), // 30mHz
         refgen.NewSine(10.0/2, 0.04, phi, 10.0/2), // 40mHz
 
-        // 00-05mm
+        // 00-05%
         refgen.NewSine(5.0/2, 0.02, phi, 5.0/2), // 20mHz
         refgen.NewSine(5.0/2, 0.03, phi, 5.0/2), // 30mHz
         refgen.NewSine(5.0/2, 0.04, phi, 5.0/2), // 40mHz
 
-        // 05-10mm
+        // 05-10%
         refgen.NewSine(5.0/2, 0.02, phi, 5.0/2+5.0), // 20mHz
         refgen.NewSine(5.0/2, 0.03, phi, 5.0/2+5.0), // 30mHz
         refgen.NewSine(5.0/2, 0.04, phi, 5.0/2+5.0), // 40mHz
 
-        // 05-15mm
+        // 05-15%
         refgen.NewSine(10.0/2, 0.02, phi, 10.0/2+5.0), // 20mHz
         refgen.NewSine(10.0/2, 0.03, phi, 10.0/2+5.0), // 30mHz
         refgen.NewSine(10.0/2, 0.04, phi, 10.0/2+5.0), // 40mHz
 
-        // 05-20mm
+        // 05-20%
         refgen.NewSine(15.0/2, 0.02, phi, 15.0/2+5.0), // 20mHz
         refgen.NewSine(15.0/2, 0.03, phi, 15.0/2+5.0), // 30mHz
         refgen.NewSine(15.0/2, 0.04, phi, 15.0/2+5.0), // 40mHz
 
-        // 10-15mm
+        // 10-15%
         refgen.NewSine(5.0/2, 0.02, phi, 5.0/2+10.0), // 20mHz
         refgen.NewSine(5.0/2, 0.03, phi, 5.0/2+10.0), // 30mHz
         refgen.NewSine(5.0/2, 0.04, phi, 5.0/2+10.0), // 40mHz
 
-        // 10-20mm
+        // 10-20%
         refgen.NewSine(10.0/2, 0.02, phi, 10.0/2+10.0), // 20mHz
         refgen.NewSine(10.0/2, 0.03, phi, 10.0/2+10.0), // 30mHz
         refgen.NewSine(10.0/2, 0.04, phi, 10.0/2+10.0), // 40mHz
 
-        // 15-20mm
+        // 15-20%
         refgen.NewSine(5.0/2, 0.02, phi, 5.0/2+15.0), // 20mHz
         refgen.NewSine(5.0/2, 0.03, phi, 5.0/2+15.0), // 30mHz
         refgen.NewSine(5.0/2, 0.04, phi, 5.0/2+15.0), // 40mHz
@@ -81,52 +81,52 @@ func main() {
         // ===
         // TRI
         // ===
-        // 00-20mm
+        // 00-20%
         refgen.NewTriangular(20.0/2, 0.02, phi, 20.0/2), // 20mHz
         refgen.NewTriangular(20.0/2, 0.03, phi, 20.0/2), // 30mHz
         refgen.NewTriangular(20.0/2, 0.04, phi, 20.0/2), // 40mHz
 
-        // 00-15mm
+        // 00-15%
         refgen.NewTriangular(15.0/2, 0.02, phi, 15.0/2), // 20mHz
         refgen.NewTriangular(15.0/2, 0.03, phi, 15.0/2), // 30mHz
         refgen.NewTriangular(15.0/2, 0.04, phi, 15.0/2), // 40mHz
 
-        // 00-10mm
+        // 00-10%
         refgen.NewTriangular(10.0/2, 0.02, phi, 10.0/2), // 20mHz
         refgen.NewTriangular(10.0/2, 0.03, phi, 10.0/2), // 30mHz
         refgen.NewTriangular(10.0/2, 0.04, phi, 10.0/2), // 40mHz
 
-        // 00-05mm
+        // 00-05%
         refgen.NewTriangular(5.0/2, 0.02, phi, 5.0/2), // 20mHz
         refgen.NewTriangular(5.0/2, 0.03, phi, 5.0/2), // 30mHz
         refgen.NewTriangular(5.0/2, 0.04, phi, 5.0/2), // 40mHz
 
-        // 05-10mm
+        // 05-10%
         refgen.NewTriangular(5.0/2, 0.02, phi, 5.0/2+5.0), // 20mHz
         refgen.NewTriangular(5.0/2, 0.03, phi, 5.0/2+5.0), // 30mHz
         refgen.NewTriangular(5.0/2, 0.04, phi, 5.0/2+5.0), // 40mHz
 
-        // 05-15mm
+        // 05-15%
         refgen.NewTriangular(10.0/2, 0.02, phi, 10.0/2+5.0), // 20mHz
         refgen.NewTriangular(10.0/2, 0.03, phi, 10.0/2+5.0), // 30mHz
         refgen.NewTriangular(10.0/2, 0.04, phi, 10.0/2+5.0), // 40mHz
 
-        // 05-20mm
+        // 05-20%
         refgen.NewTriangular(15.0/2, 0.02, phi, 15.0/2+5.0), // 20mHz
         refgen.NewTriangular(15.0/2, 0.03, phi, 15.0/2+5.0), // 30mHz
         refgen.NewTriangular(15.0/2, 0.04, phi, 15.0/2+5.0), // 40mHz
 
-        // 10-15mm
+        // 10-15%
         refgen.NewTriangular(5.0/2, 0.02, phi, 5.0/2+10.0), // 20mHz
         refgen.NewTriangular(5.0/2, 0.03, phi, 5.0/2+10.0), // 30mHz
         refgen.NewTriangular(5.0/2, 0.04, phi, 5.0/2+10.0), // 40mHz
 
-        // 10-20mm
+        // 10-20%
         refgen.NewTriangular(10.0/2, 0.02, phi, 10.0/2+10.0), // 20mHz
         refgen.NewTriangular(10.0/2, 0.03, phi, 10.0/2+10.0), // 30mHz
         refgen.NewTriangular(10.0/2, 0.04, phi, 10.0/2+10.0), // 40mHz
 
-        // 15-20mm
+        // 15-20%
         refgen.NewTriangular(5.0/2, 0.02, phi, 5.0/2+15.0), // 20mHz
         refgen.NewTriangular(5.0/2, 0.03, phi, 5.0/2+15.0), // 30mHz
         refgen.NewTriangular(5.0/2, 0.04, phi, 5.0/2+15.0), // 40mHz
@@ -137,7 +137,8 @@ func main() {
         dt: 0.01,
     }
 
-    var loadRef float32 = 0.1
+    sensorLength := 180.0 // mm
+    var loadRef float32 = 1 // N
 
     for i, s := range signals {
         // calibration
@@ -149,7 +150,7 @@ func main() {
         }
         
         // experiment
-        finalized := exe([]refgen.Signal{s}, exeInfo)
+        finalized := exe([]refgen.Signal{s}, exeInfo, sensorLength)
         if !finalized {
             break
         }
@@ -161,7 +162,7 @@ func main() {
     }
 }
 
-func exe(signals []refgen.Signal, exeInfo ExeInfo) bool {
+func exe(signals []refgen.Signal, exeInfo ExeInfo, sensorLength float64) bool {
     // ==========
     // COMPONENTS
     // ==========
@@ -224,6 +225,10 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) bool {
     // =========
     data := make(map[string]any)
     prevPositionValue := 0.0
+    var voltageInit float32 = 0.0
+    initialVoltageSet := false
+    var voltageRel float32 = 0.0
+    var voltageFiltRel float32 = 0.0
 
     // =========
     // MAIN LOOP
@@ -240,30 +245,36 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) bool {
         loopStartTime := time.Now()
 
         // READ
-        voltage, filteredVoltage, err := vs.Read()
+        voltage, voltageFilt, err := vs.Read() // V
         if err != nil {
             panic(err)
         }
-        position, err := hs.Read()
+        if !initialVoltageSet {
+            voltageInit = voltage
+            initialVoltageSet = true
+        }
+        voltageRel = (voltage-voltageInit) / voltageInit
+        voltageFiltRel = (voltageFilt-voltageInit) / voltageInit
+        
+        position, err := hs.Read() // mm
         if err != nil {
             position = prevPositionValue
         }
         if position != -1 {
             prevPositionValue = position
         }
-        load, filteredLoad, err := lc.Read()
+        strain := position / sensorLength // strain
+
+        load, loadFilt, err := lc.Read() // N
         if err != nil {
             panic(err)
         }
 
         // REFERENCE
-        ref := rg.Compute(time.Since(programStartTime).Seconds())
-
-        // ERROR
-        posError := ref - position
+        ref := rg.Compute(time.Since(programStartTime).Seconds()) // strain
 
         // ACTUATE
-        _, err = motor.Write(posError, exeInfo.dt)
+        _, err = motor.Write(ref-strain, exeInfo.dt)
         if err != nil {
             panic(err)
         }
@@ -272,13 +283,16 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo) bool {
         data["time"] = time.Since(programStartTime).Seconds()
 
         data["load"] = load
-        data["filtered_load"] = filteredLoad
+        data["load_filt"] = loadFilt
 
         data["voltage"] = voltage
-        data["filtered_voltage"] = filteredVoltage
+        data["voltage_filt"] = voltageFilt
+        data["voltage_rel"] = voltageRel
+        data["voltage_filt_rel"] = voltageFiltRel
 
         data["reference"] = ref
         data["position"] = position
+        data["strain"] = strain
 
         err = c.Send(data)
         if err != nil {

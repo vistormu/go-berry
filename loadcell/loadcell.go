@@ -36,9 +36,9 @@ func (lc *LoadCell) Read() (float32, float32, error) {
         return -1, -1, err
     }
 
-    // convert to kg
+    // convert to N
     value := ((int(data[0]) & 0x1F) << 7) | (int(data[1]) >> 1)
-    load := (float32(value) / 4095) * 5
+    load := (float32(value) / 4095) * 25
 
     // filtering
     if !lc.kfInitialized {
