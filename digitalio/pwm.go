@@ -35,7 +35,7 @@ func (p Pwm) Write(dutyCycle int) error {
         dutyCycle = 99
     }
 
-    dutyFreq := uint32(float32(dutyCycle) / 100.0 * float32(p.cycleLen))
+    dutyFreq := uint32(float64(dutyCycle) / 100.0 * float64(p.cycleLen))
     p.pin.DutyCycle(dutyFreq, p.cycleLen)
 
     return nil

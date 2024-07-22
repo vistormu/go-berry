@@ -17,9 +17,9 @@ func New(chipSelectPinNo int) (*LoadCell, error) {
         return nil, err
     }
 
-    var processVariance float32 = 0.1
-    var measurementVariance float32 = 20
-    var initialErrorCovariance float32 = 1.0
+    var processVariance float64 = 0.1
+    var measurementVariance float64 = 20
+    var initialErrorCovariance float64 = 1.0
     kf := utils.NewKalmanFilter(
         processVariance,
         measurementVariance,
@@ -29,7 +29,7 @@ func New(chipSelectPinNo int) (*LoadCell, error) {
     return &LoadCell{spi, kf, false}, nil
 }
 
-func (lc *LoadCell) Read() (float32, float32, error) {
+func (lc *LoadCell) Read() (float64, float64, error) {
     // read bytes
     data, err := lc.spi.Read()
     if err != nil {
@@ -38,7 +38,7 @@ func (lc *LoadCell) Read() (float32, float32, error) {
 
     // convert to N
     value := ((int(data[0]) & 0x1F) << 7) | (int(data[1]) >> 1)
-    load := (float32(value) / 4095) * 25
+    load := (float64(value) / 4095) * 50
 
     // filtering
     if !lc.kfInitialized {

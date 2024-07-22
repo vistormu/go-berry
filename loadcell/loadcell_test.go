@@ -18,7 +18,7 @@ func TestVoltageSensor(t *testing.T) {
     for range 10*100 {
         <- ticker.C
 
-        load, err := lc.Read()
+        load, _, err := lc.Read()
         if err != nil {
             t.Fatal(err)
         }

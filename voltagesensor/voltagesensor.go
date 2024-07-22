@@ -7,20 +7,21 @@ import (
 
 type VoltageSensor struct {
     spi digitalio.Spi
-    vRef float32
+    vRef float64
     kf *utils.KalmanFilter
     kfInitialized bool
+    prevValue float64
 }
 
-func New(vRef float32, chipSelectPinNo int) (*VoltageSensor, error) {
+func New(vRef float64, chipSelectPinNo int) (*VoltageSensor, error) {
     spi, err := digitalio.NewSpi(chipSelectPinNo) 
     if err != nil {
         return nil, err
     }
     
-    var processVariance float32 = 0.05
-    var measurementVariance float32 = 30
-    var initialErrorCovariance float32 = 1.0
+    processVariance := 0.05
+    measurementVariance := 30.0
+    initialErrorCovariance := 1.0
     kf := utils.NewKalmanFilter(
         processVariance,
         measurementVariance,
@@ -32,10 +33,11 @@ func New(vRef float32, chipSelectPinNo int) (*VoltageSensor, error) {
         vRef: vRef,
         kf: kf,
         kfInitialized: false,
+        prevValue: 0.0,
     }, nil
 }
 
-func (vs *VoltageSensor) Read() (float32, float32, error) {
+func (vs *VoltageSensor) Read() (float64, float64, error) {
     // read bytes
     data, err := vs.spi.Read()
     if err != nil {
@@ -44,16 +46,23 @@ func (vs *VoltageSensor) Read() (float32, float32, error) {
     
     // convert to voltage
     value := ((int(data[0]) & 0x1F) << 7) | (int(data[1]) >> 1)
-    voltage := (float32(value) / 4095) * vs.vRef
+    voltage := (float64(value) / 4095) * vs.vRef
 
     // filtering
     if !vs.kfInitialized {
         vs.kf.SetInitialEstimate(voltage)
         vs.kfInitialized = true
+        vs.prevValue = voltage
 
         return voltage, voltage, nil
     }
+    if voltage > 1.25*vs.prevValue {
+        voltage = vs.prevValue
+    }
+
     filteredVoltage := vs.kf.Compute(voltage)
+
+    vs.prevValue = voltage
 
     return voltage, filteredVoltage, nil
 }

@@ -19,8 +19,8 @@ var modelTypeToPath = map[ModelType]string{
 type Model struct {
     contextLength int
     session *ort.AdvancedSession
-    inputTensor *ort.Tensor[float32]
-    outputTensor *ort.Tensor[float32]
+    inputTensor *ort.Tensor[float64]
+    outputTensor *ort.Tensor[float64]
 }
 
 func New(modelType ModelType, contextLength int) (*Model, error) {
@@ -38,13 +38,13 @@ func New(modelType ModelType, contextLength int) (*Model, error) {
     }
 
     // tensors
-    input := make([]float32, contextLength)
+    input := make([]float64, contextLength)
     inputTensor, err := ort.NewTensor(ort.NewShape(1, int64(contextLength)), input)
     if err != nil {
         return nil, err
     }
 
-    outputTensor, err := ort.NewEmptyTensor[float32](ort.NewShape(1, 1))
+    outputTensor, err := ort.NewEmptyTensor[float64](ort.NewShape(1, 1))
     if err != nil {
         return nil, err
     }
@@ -70,7 +70,7 @@ func New(modelType ModelType, contextLength int) (*Model, error) {
     }, nil
 }
 
-func (m *Model) Compute(input []float32) (float32, error) {
+func (m *Model) Compute(input []float64) (float64, error) {
     if len(input) != m.contextLength {
         return 0.0, fmt.Errorf("Input dimension should match given context length. Got %d and want %d", len(input), m.contextLength)
     }

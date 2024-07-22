@@ -1,0 +1,11 @@
+time:
+  exeTime: 300 # s
+  dt: 0.01 # s
+
+sensor:
+  length: 50 # mm
+  initialLoad: 1 # N
+
+experiments:
+  sinusoidal:
+    

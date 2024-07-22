@@ -29,18 +29,18 @@ func New(pwmPinNo, freq, directionPinNo int) (Motor, error) {
     direction := digitalio.NewDigitalOut(directionPinNo, digitalio.Low)
 
     // pid
-    pid := controller.NewPid(50, 0, 0.0, 0.0, [2]float32{-1, 1})
+    pid := controller.NewPid(50, 0, 0.0, 0.0, [2]float64{-1, 1})
 
     return Motor{pwm, direction, pid}, nil
 }
 
 func (m Motor) Write(posError float64, dt float64) (int, error) {
     // pwm value
-    pwmValue := m.pid.Compute(float32(posError), float32(dt))
+    pwmValue := m.pid.Compute(float64(posError), float64(dt))
     pwmValue = utils.Clip(pwmValue, -100, 100)
 
     sign := math.Signbit(float64(pwmValue))
-    value := float32(math.Abs(float64(pwmValue)))
+    value := float64(math.Abs(float64(pwmValue)))
 
     // direction
     if sign {

@@ -16,30 +16,30 @@ func Clip[T Number](value, min, max T) T {
 }
 
 type Window struct {
-    Data []float32
+    Data []float64
 }
 
 func NewWindow(capacity int) *Window {
     return &Window{
-        Data: make([]float32, capacity),
+        Data: make([]float64, capacity),
     }
 }
 
-func (w *Window) Append(element float32) {
+func (w *Window) Append(element float64) {
     copy(w.Data, w.Data[1:])
     w.Data[len(w.Data)-1] = element
 }
 
 type KalmanFilter struct {
-    q float32
-    r float32
-    xHat float32
-    p float32
-    f float32
-    h float32
+    q float64
+    r float64
+    xHat float64
+    p float64
+    f float64
+    h float64
 }
 
-func NewKalmanFilter(processVariance, measurementVariance, initialErrorCovariance float32) *KalmanFilter {
+func NewKalmanFilter(processVariance, measurementVariance, initialErrorCovariance float64) *KalmanFilter {
     return &KalmanFilter{
         q: processVariance,
         r: measurementVariance,
@@ -50,11 +50,11 @@ func NewKalmanFilter(processVariance, measurementVariance, initialErrorCovarianc
     } 
 }
 
-func (kf *KalmanFilter) SetInitialEstimate(value float32) {
+func (kf *KalmanFilter) SetInitialEstimate(value float64) {
     kf.xHat = value
 }
 
-func (kf *KalmanFilter) Compute(measurement float32) float32 {
+func (kf *KalmanFilter) Compute(measurement float64) float64 {
     xHatPredict := kf.f * kf.xHat
     pPredict := kf.f * kf.p * kf.f + kf.q
     
