@@ -71,7 +71,7 @@ func calibrate(args []string) error {
         fmt.Printf("\rcurrent value %.4f", load)
 
         if load >= loadRef {
-            fmt.Println()
+            fmt.Printf("\n\n")
             return nil
         }
 

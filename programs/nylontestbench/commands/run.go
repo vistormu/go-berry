@@ -8,7 +8,7 @@ import (
 	"time"
     "math"
 
-    // "gopkg.in/yaml.v3"
+    "gopkg.in/yaml.v3"
     
 	"goraspio/client"
 	"goraspio/hallsensor"
@@ -18,146 +18,77 @@ import (
     "goraspio/loadcell"
 )
 
-type ExeInfo struct {
-    exeTime int
-    dt float64
+var configPath string = "programs/nylontestbench/config.yaml"
+
+type ExperimentConfig struct {
+    Time struct {
+        ExeTime int `yaml:"exe_time"`
+        Dt float64
+    }
+    Sensor struct {
+        Length float64
+        InitialLoad string `yaml:"initial_load"`
+    }
+    Experiments struct {
+        Sinusoidal []struct{
+            Freq float64
+            MinAmp float64 `yaml:"min_amp"`
+            MaxAmp float64  `yaml:"max_amp"`
+        }
+        Triangular []struct{
+            Freq float64
+            MinAmp float64 `yaml:"min_amp"`
+            MaxAmp float64 `yaml:"max_amp"`
+        }
+    }
 }
 
 func run(args []string) error {
+    if len(args) != 0 {
+        return fmt.Errorf("[run] wrong number of arguments: expected 0 and got %d", len(args))
+    }
+
+    // read config.yaml
+    content, err := os.ReadFile(configPath)
+    if err != nil {
+        return err
+    }
+    
+    ec := ExperimentConfig{}
+    err = yaml.Unmarshal(content, &ec)
+    if err != nil {
+        return err
+    }
+
+    // create signals
     phi := -math.Pi/2
-    signals := []refgen.Signal{
-        // ===
-        // SIN
-        // ===
-        // 00-20%
-        // refgen.NewSine(20.0/2, 0.02, phi, 20.0/2), // 20mHz
-        // refgen.NewSine(20.0/2, 0.03, phi, 20.0/2), // 30mHz
-        // refgen.NewSine(20.0/2, 0.04, phi, 20.0/2), // 40mHz
-
-        // 00-15%
-        // refgen.NewSine(15.0/2, 0.02, phi, 15.0/2), // 20mHz
-        // refgen.NewSine(15.0/2, 0.03, phi, 15.0/2), // 30mHz
-        // refgen.NewSine(15.0/2, 0.04, phi, 15.0/2), // 40mHz
-
-        // 00-10%
-        // refgen.NewSine(10.0/2, 0.02, phi, 10.0/2), // 20mHz
-        // refgen.NewSine(10.0/2, 0.03, phi, 10.0/2), // 30mHz
-        refgen.NewSine(10.0/2, 0.04, phi, 10.0/2), // 40mHz
-
-        // 00-05%
-        // refgen.NewSine(5.0/2, 0.02, phi, 5.0/2), // 20mHz
-        // refgen.NewSine(5.0/2, 0.03, phi, 5.0/2), // 30mHz
-        // refgen.NewSine(5.0/2, 0.04, phi, 5.0/2), // 40mHz
-
-        // 05-10%
-        // refgen.NewSine(5.0/2, 0.02, phi, 5.0/2+5.0), // 20mHz
-        // refgen.NewSine(5.0/2, 0.03, phi, 5.0/2+5.0), // 30mHz
-        // refgen.NewSine(5.0/2, 0.04, phi, 5.0/2+5.0), // 40mHz
-
-        // 05-15%
-        // refgen.NewSine(10.0/2, 0.02, phi, 10.0/2+5.0), // 20mHz
-        // refgen.NewSine(10.0/2, 0.03, phi, 10.0/2+5.0), // 30mHz
-        // refgen.NewSine(10.0/2, 0.04, phi, 10.0/2+5.0), // 40mHz
-
-        // 05-20%
-        // refgen.NewSine(15.0/2, 0.02, phi, 15.0/2+5.0), // 20mHz
-        // refgen.NewSine(15.0/2, 0.03, phi, 15.0/2+5.0), // 30mHz
-        // refgen.NewSine(15.0/2, 0.04, phi, 15.0/2+5.0), // 40mHz
-
-        // 10-15%
-        // refgen.NewSine(5.0/2, 0.02, phi, 5.0/2+10.0), // 20mHz
-        // refgen.NewSine(5.0/2, 0.03, phi, 5.0/2+10.0), // 30mHz
-        // refgen.NewSine(5.0/2, 0.04, phi, 5.0/2+10.0), // 40mHz
-
-        // 10-20%
-        // refgen.NewSine(10.0/2, 0.02, phi, 10.0/2+10.0), // 20mHz
-        // refgen.NewSine(10.0/2, 0.03, phi, 10.0/2+10.0), // 30mHz
-        // refgen.NewSine(10.0/2, 0.04, phi, 10.0/2+10.0), // 40mHz
-
-        // 15-20%
-        // refgen.NewSine(5.0/2, 0.02, phi, 5.0/2+15.0), // 20mHz
-        // refgen.NewSine(5.0/2, 0.03, phi, 5.0/2+15.0), // 30mHz
-        // refgen.NewSine(5.0/2, 0.04, phi, 5.0/2+15.0), // 40mHz
-
-        // ===
-        // TRI
-        // ===
-        // 00-20%
-        // refgen.NewTriangular(20.0/2, 0.02, phi, 20.0/2), // 20mHz
-        // refgen.NewTriangular(20.0/2, 0.03, phi, 20.0/2), // 30mHz
-        // refgen.NewTriangular(20.0/2, 0.04, phi, 20.0/2), // 40mHz
-
-        // 00-15%
-        // refgen.NewTriangular(15.0/2, 0.02, phi, 15.0/2), // 20mHz
-        // refgen.NewTriangular(15.0/2, 0.03, phi, 15.0/2), // 30mHz
-        // refgen.NewTriangular(15.0/2, 0.04, phi, 15.0/2), // 40mHz
-
-        // 00-10%
-        // refgen.NewTriangular(10.0/2, 0.02, phi, 10.0/2), // 20mHz
-        // refgen.NewTriangular(10.0/2, 0.03, phi, 10.0/2), // 30mHz
-        // refgen.NewTriangular(10.0/2, 0.04, phi, 10.0/2), // 40mHz
-
-        // 00-05%
-        // refgen.NewTriangular(5.0/2, 0.02, phi, 5.0/2), // 20mHz
-        // refgen.NewTriangular(5.0/2, 0.03, phi, 5.0/2), // 30mHz
-        // refgen.NewTriangular(5.0/2, 0.04, phi, 5.0/2), // 40mHz
-
-        // 05-10%
-        // refgen.NewTriangular(5.0/2, 0.02, phi, 5.0/2+5.0), // 20mHz
-        // refgen.NewTriangular(5.0/2, 0.03, phi, 5.0/2+5.0), // 30mHz
-        // refgen.NewTriangular(5.0/2, 0.04, phi, 5.0/2+5.0), // 40mHz
-
-        // 05-15%
-        // refgen.NewTriangular(10.0/2, 0.02, phi, 10.0/2+5.0), // 20mHz
-        // refgen.NewTriangular(10.0/2, 0.03, phi, 10.0/2+5.0), // 30mHz
-        // refgen.NewTriangular(10.0/2, 0.04, phi, 10.0/2+5.0), // 40mHz
-
-        // 05-20%
-        // refgen.NewTriangular(15.0/2, 0.02, phi, 15.0/2+5.0), // 20mHz
-        // refgen.NewTriangular(15.0/2, 0.03, phi, 15.0/2+5.0), // 30mHz
-        // refgen.NewTriangular(15.0/2, 0.04, phi, 15.0/2+5.0), // 40mHz
-
-        // 10-15%
-        // refgen.NewTriangular(5.0/2, 0.02, phi, 5.0/2+10.0), // 20mHz
-        // refgen.NewTriangular(5.0/2, 0.03, phi, 5.0/2+10.0), // 30mHz
-        // refgen.NewTriangular(5.0/2, 0.04, phi, 5.0/2+10.0), // 40mHz
-
-        // 10-20%
-        // refgen.NewTriangular(10.0/2, 0.02, phi, 10.0/2+10.0), // 20mHz
-        // refgen.NewTriangular(10.0/2, 0.03, phi, 10.0/2+10.0), // 30mHz
-        // refgen.NewTriangular(10.0/2, 0.04, phi, 10.0/2+10.0), // 40mHz
-
-        // 15-20%
-        // refgen.NewTriangular(5.0/2, 0.02, phi, 5.0/2+15.0), // 20mHz
-        // refgen.NewTriangular(5.0/2, 0.03, phi, 5.0/2+15.0), // 30mHz
-        // refgen.NewTriangular(5.0/2, 0.04, phi, 5.0/2+15.0), // 40mHz
+    signals := make([]refgen.Signal, len(ec.Experiments.Sinusoidal)+len(ec.Experiments.Triangular))
+    for i, s := range ec.Experiments.Sinusoidal {
+        signals[i] = refgen.NewSine((s.MaxAmp-s.MinAmp)/2, s.Freq, phi, (s.MaxAmp-s.MinAmp)/2+s.MinAmp)
     }
-
-    exeInfo := ExeInfo{
-        exeTime: 5*60,
-        dt: 0.01,
+    for i, s := range ec.Experiments.Triangular {
+        signals[i+len(ec.Experiments.Sinusoidal)] = refgen.NewTriangular((s.MaxAmp-s.MinAmp)/2, s.Freq, phi, (s.MaxAmp-s.MinAmp)/2+s.MinAmp)
     }
-
-    sensorLength := 140.0 // mm
-    loadRef := "1.0" // N
-    var err error
 
     for i, s := range signals {
-        // calibration
+        fmt.Printf("[run] running\n\n")
+
+        // release
         err = release(args)
         if err != nil {
             return err
         }
 
-        err = calibrate([]string{loadRef})
+        // calibration
+        err = calibrate([]string{ec.Sensor.InitialLoad})
         if err != nil {
             return err
         }
         
         // experiment
-        finalized := exe([]refgen.Signal{s}, exeInfo, sensorLength)
-        if !finalized {
-            break
+        err := exe([]refgen.Signal{s}, ec.Time.ExeTime, ec.Time.Dt, ec.Sensor.Length)
+        if err != nil {
+            return err
         }
 
         // wait for next experiment
@@ -169,7 +100,7 @@ func run(args []string) error {
     return nil
 }
 
-func exe(signals []refgen.Signal, exeInfo ExeInfo, sensorLength float64) bool {
+func exe(signals []refgen.Signal, exeTime int, dt float64, sensorLength float64) error {
     // ==========
     // COMPONENTS
     // ==========
@@ -179,7 +110,7 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo, sensorLength float64) bool {
     dirPinNo := 6
     motor, err := motor.New(pwmPinNo, freq, dirPinNo)
     if err != nil {
-        panic(err)
+        return err
     }
     defer motor.Close()
 
@@ -188,21 +119,21 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo, sensorLength float64) bool {
     voltageSensorhipSelectNo := 25
     vs, err := voltagesensor.New(vRef, voltageSensorhipSelectNo)
     if err != nil {
-        panic(err)
+        return err
     }
     defer vs.Close()
 
     // Hall Sensor
     hs, err := hallsensor.NewI2C(0x40, 1)
     if err != nil {
-        panic(err)
+        return err
     }
     defer hs.Close()
 
     // Load cell
     lc, err := loadcell.New(24)
     if err != nil {
-        panic(err)
+        return err
     }
     defer lc.Close()
 
@@ -211,7 +142,7 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo, sensorLength float64) bool {
     port := 8080
     c, err := client.New(ip, port)
     if err != nil {
-        panic(err)
+        return err
     }
     defer c.Close()
 
@@ -224,7 +155,7 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo, sensorLength float64) bool {
     quit := make(chan os.Signal, 1)
     signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
     
-    ticker := time.NewTicker(time.Duration(exeInfo.dt*float64(time.Second)))
+    ticker := time.NewTicker(time.Duration(dt*float64(time.Second)))
     defer ticker.Stop()
 
     // =========
@@ -243,18 +174,17 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo, sensorLength float64) bool {
     programStartTime := time.Now()
     timeFromStart := 0.0
 
-    for range int(float64(exeInfo.exeTime)/exeInfo.dt) {
+    for range int(float64(exeTime)/dt) {
     select {
     case <- quit:
-        fmt.Println("\n\nKeyboard interrupt")
-        return false
+        return fmt.Errorf("[run] keyboard interrupt")
     case <-ticker.C:
         loopStartTime := time.Now()
 
         // READ
         voltage, voltageFilt, err := vs.Read() // V
         if err != nil {
-            panic(err)
+            return err
         }
         if !initialVoltageSet {
             voltageInit = voltage
@@ -274,16 +204,16 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo, sensorLength float64) bool {
 
         load, loadFilt, err := lc.Read() // N
         if err != nil {
-            panic(err)
+            return err
         }
 
         // REFERENCE
         ref := rg.Compute(time.Since(programStartTime).Seconds()) // strain
 
         // ACTUATE
-        _, err = motor.Write(ref-strain, exeInfo.dt)
+        _, err = motor.Write(ref-strain, dt)
         if err != nil {
-            panic(err)
+            return err
         }
 
         // SEND
@@ -303,7 +233,7 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo, sensorLength float64) bool {
 
         err = c.Send(data)
         if err != nil {
-            panic(err)
+            return err
         }
 
         // TIME
@@ -311,9 +241,9 @@ func exe(signals []refgen.Signal, exeInfo ExeInfo, sensorLength float64) bool {
         timeFromStart = time.Since(programStartTime).Seconds()
 
         // PRINT
-        fmt.Printf("\rTime: %.3f ms / %.3f s | Strain: %.3f", timePerIteration, timeFromStart, strain)
+        fmt.Printf("\rtime per iteration: %.3f ms | execution time: %.0f s", timePerIteration, timeFromStart)
     }}
     fmt.Println("\n\nExperiment finalized")
 
-    return true
+    return nil
 }

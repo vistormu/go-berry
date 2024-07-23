@@ -66,7 +66,7 @@ func release(args []string) error {
         fmt.Printf("\rcurrent value: %.4f", load)
 
         if math.Abs(load) < 0.01 {
-            fmt.Println()
+            fmt.Printf("\n\n")
             return nil
         }
 
