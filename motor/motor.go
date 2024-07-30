@@ -29,7 +29,7 @@ func New(pwmPinNo, freq, directionPinNo int) (Motor, error) {
     direction := digitalio.NewDigitalOut(directionPinNo, digitalio.Low)
 
     // pid
-    pid := controller.NewPid(50, 0, 0.0, 0.0, [2]float64{-1, 1})
+    pid := controller.NewPid(100, 0, 0, 0, [2]float64{-1, 1})
 
     return Motor{pwm, direction, pid}, nil
 }

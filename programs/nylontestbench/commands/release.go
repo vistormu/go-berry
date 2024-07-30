@@ -4,13 +4,12 @@ import (
     "time"
     "fmt"
     "os"
+    "math"
     "os/signal"
     "syscall"
-    "math"
     
     "goraspio/loadcell"
     "goraspio/motor"
-    "goraspio/digitalio"
 )
 
 
@@ -43,7 +42,10 @@ func release(args []string) error {
     quit := make(chan os.Signal, 1)
     signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 
+    // variables
     programStartTime := time.Now()
+    loadRef := 0.0
+    refReached := false
 
     fmt.Println("[release] releasing wire")
 
@@ -54,24 +56,32 @@ func release(args []string) error {
         return nil
 
     case <- ticker.C:
-        if time.Since(programStartTime).Seconds() > 5 {
-            return fmt.Errorf("[release] timeout error")
+        if time.Since(programStartTime).Seconds() > 40 && !refReached {
+            fmt.Println()
+            return fmt.Errorf("[calibrate] timeout error")
         }
-
-        // read
-        load, _, err := lc.Read()
-        if err != nil {
-            panic(err)
-        }
-        fmt.Printf("\rcurrent value: %.4f", load)
-
-        if math.Abs(load) < 0.01 {
-            fmt.Printf("\n\n")
+        if time.Since(programStartTime).Seconds() > 10 && refReached {
+            fmt.Println()
             return nil
         }
 
+        // read
+        _, load, err := lc.Read()
+        if err != nil {
+            return err
+        }
+
+        fmt.Printf("\rload: %.4f", load)
+
         // motor
-        err = motor.WriteRaw(100, digitalio.High)
+        _, err = motor.Write(loadRef-load, 0.01)
+        if err != nil {
+            return err
+        }
+
+        if  math.Abs(loadRef-load) < 0.01 {
+            refReached = true
+        }
     }
     }
 }

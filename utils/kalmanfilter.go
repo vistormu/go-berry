@@ -1,35 +1,5 @@
 package utils
 
-
-type Number interface {
-    ~float64 | ~float32 | ~int
-}
-
-func Clip[T Number](value, min, max T) T {
-    if value < min {
-        return min
-    }
-    if value > max {
-        return max
-    }
-    return value
-}
-
-type Window struct {
-    Data []float64
-}
-
-func NewWindow(capacity int) *Window {
-    return &Window{
-        Data: make([]float64, capacity),
-    }
-}
-
-func (w *Window) Append(element float64) {
-    copy(w.Data, w.Data[1:])
-    w.Data[len(w.Data)-1] = element
-}
-
 type KalmanFilter struct {
     q float64
     r float64
@@ -38,7 +8,6 @@ type KalmanFilter struct {
     f float64
     h float64
 }
-
 func NewKalmanFilter(processVariance, measurementVariance, initialErrorCovariance float64) *KalmanFilter {
     return &KalmanFilter{
         q: processVariance,
@@ -49,11 +18,9 @@ func NewKalmanFilter(processVariance, measurementVariance, initialErrorCovarianc
         xHat: 0.0,
     } 
 }
-
 func (kf *KalmanFilter) SetInitialEstimate(value float64) {
     kf.xHat = value
 }
-
 func (kf *KalmanFilter) Compute(measurement float64) float64 {
     xHatPredict := kf.f * kf.xHat
     pPredict := kf.f * kf.p * kf.f + kf.q

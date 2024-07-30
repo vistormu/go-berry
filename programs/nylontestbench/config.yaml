@@ -1,91 +1,60 @@
 time:
-  exe_time: 60 # s
+  exe_time: 300 # s
   dt: 0.01 # s
 
 sensor:
-  length: 50 # mm
-  initial_load: 1 # N
+  length: 120 # mm
+  initial_load: 1.0 # N
 
 experiments:
   sinusoidal: # Hz, strain (%), strain (%)
+    # 0-2.5%
+    # - {freq: 0.02, min_amp: 0, max_amp: 2.5}
+    # - {freq: 0.03, min_amp: 0, max_amp: 2.5}
+    # - {freq: 0.04, min_amp: 0, max_amp: 2.5}
+    # 2.5-5%
+    # - {freq: 0.02, min_amp: 2.5, max_amp: 5}
+    # - {freq: 0.03, min_amp: 2.5, max_amp: 5}
+    # - {freq: 0.04, min_amp: 2.5, max_amp: 5}
+    # 5-7.5%
+    # - {freq: 0.02, min_amp: 5, max_amp: 7.5}
+    # - {freq: 0.03, min_amp: 5, max_amp: 7.5}
+    # - {freq: 0.04, min_amp: 5, max_amp: 7.5}
     # 0-5%
-    - {freq: 0.02, min_amp: 0, max_amp: 5}
-    - {freq: 0.03, min_amp: 0, max_amp: 5}
-    - {freq: 0.04, min_amp: 0, max_amp: 5}
-    # 0-10%
-    - {freq: 0.02, min_amp: 0, max_amp: 10}
-    - {freq: 0.03, min_amp: 0, max_amp: 10}
-    - {freq: 0.04, min_amp: 0, max_amp: 10}
-    # 0-15%
-    - {freq: 0.02, min_amp: 0, max_amp: 15}
-    - {freq: 0.03, min_amp: 0, max_amp: 15}
-    - {freq: 0.04, min_amp: 0, max_amp: 15}
-    # 0-20%
-    - {freq: 0.02, min_amp: 0, max_amp: 20}
-    - {freq: 0.03, min_amp: 0, max_amp: 20}
-    - {freq: 0.04, min_amp: 0, max_amp: 20}
-    # 5-10%
-    - {freq: 0.02, min_amp: 5, max_amp: 10}
-    - {freq: 0.03, min_amp: 5, max_amp: 10}
-    - {freq: 0.04, min_amp: 5, max_amp: 10}
-    # 5-15%
-    - {freq: 0.02, min_amp: 5, max_amp: 15}
-    - {freq: 0.03, min_amp: 5, max_amp: 15}
-    - {freq: 0.04, min_amp: 5, max_amp: 15}
-    # 5-20%
-    - {freq: 0.02, min_amp: 5, max_amp: 20}
-    - {freq: 0.03, min_amp: 5, max_amp: 20}
-    - {freq: 0.04, min_amp: 5, max_amp: 20}
-    # 10-15%
-    - {freq: 0.02, min_amp: 10, max_amp: 15}
-    - {freq: 0.03, min_amp: 10, max_amp: 15}
-    - {freq: 0.04, min_amp: 10, max_amp: 15}
-    # 10-20%
-    - {freq: 0.02, min_amp: 10, max_amp: 20}
-    - {freq: 0.03, min_amp: 10, max_amp: 20}
-    - {freq: 0.04, min_amp: 10, max_amp: 20}
-    # 15-20%
-    - {freq: 0.02, min_amp: 15, max_amp: 20}
-    - {freq: 0.03, min_amp: 15, max_amp: 20}
-    - {freq: 0.04, min_amp: 15, max_amp: 20}
+    # - {freq: 0.02, min_amp: 0, max_amp: 5}
+    # - {freq: 0.03, min_amp: 0, max_amp: 5}
+    # - {freq: 0.04, min_amp: 0, max_amp: 5}
+    # 2.5-7.5%
+    # - {freq: 0.02, min_amp: 2.5, max_amp: 7.5}
+    # - {freq: 0.03, min_amp: 2.5, max_amp: 7.5}
+    # - {freq: 0.04, min_amp: 2.5, max_amp: 7.5}
+    # 0-7.5%
+    # - {freq: 0.02, min_amp: 0, max_amp: 7}
+    # - {freq: 0.03, min_amp: 0, max_amp: 7}
+    # - {freq: 0.04, min_amp: 0, max_amp: 7}
+
   triangular:
+    # 0-2.5%
+    # - {freq: 0.02, min_amp: 0, max_amp: 2.5}
+    # - {freq: 0.03, min_amp: 0, max_amp: 2.5}
+    # - {freq: 0.04, min_amp: 0, max_amp: 2.5}
+    # 2.5-5%
+    # - {freq: 0.02, min_amp: 2.5, max_amp: 5}
+    # - {freq: 0.03, min_amp: 2.5, max_amp: 5}
+    # - {freq: 0.04, min_amp: 2.5, max_amp: 5}
+    # 5-7.5%
+    # - {freq: 0.02, min_amp: 5, max_amp: 7}
+    # - {freq: 0.03, min_amp: 5, max_amp: 7}
+    # - {freq: 0.04, min_amp: 5, max_amp: 7}
     # 0-5%
-    - {freq: 0.02, min_amp: 0, max_amp: 5}
-    - {freq: 0.03, min_amp: 0, max_amp: 5}
-    - {freq: 0.04, min_amp: 0, max_amp: 5}
-    # 0-10%
-    - {freq: 0.02, min_amp: 0, max_amp: 10}
-    - {freq: 0.03, min_amp: 0, max_amp: 10}
-    - {freq: 0.04, min_amp: 0, max_amp: 10}
-    # 0-15%
-    - {freq: 0.02, min_amp: 0, max_amp: 15}
-    - {freq: 0.03, min_amp: 0, max_amp: 15}
-    - {freq: 0.04, min_amp: 0, max_amp: 15}
-    # 0-20%
-    - {freq: 0.02, min_amp: 0, max_amp: 20}
-    - {freq: 0.03, min_amp: 0, max_amp: 20}
-    - {freq: 0.04, min_amp: 0, max_amp: 20}
-    # 5-10%
-    - {freq: 0.02, min_amp: 5, max_amp: 10}
-    - {freq: 0.03, min_amp: 5, max_amp: 10}
-    - {freq: 0.04, min_amp: 5, max_amp: 10}
-    # 5-15%
-    - {freq: 0.02, min_amp: 5, max_amp: 15}
-    - {freq: 0.03, min_amp: 5, max_amp: 15}
-    - {freq: 0.04, min_amp: 5, max_amp: 15}
-    # 5-20%
-    - {freq: 0.02, min_amp: 5, max_amp: 20}
-    - {freq: 0.03, min_amp: 5, max_amp: 20}
-    - {freq: 0.04, min_amp: 5, max_amp: 20}
-    # 10-15%
-    - {freq: 0.02, min_amp: 10, max_amp: 15}
-    - {freq: 0.03, min_amp: 10, max_amp: 15}
-    - {freq: 0.04, min_amp: 10, max_amp: 15}
-    # 10-20%
-    - {freq: 0.02, min_amp: 10, max_amp: 20}
-    - {freq: 0.03, min_amp: 10, max_amp: 20}
-    - {freq: 0.04, min_amp: 10, max_amp: 20}
-    # 15-20%
-    - {freq: 0.02, min_amp: 15, max_amp: 20}
-    - {freq: 0.03, min_amp: 15, max_amp: 20}
-    - {freq: 0.04, min_amp: 15, max_amp: 20}
+    # - {freq: 0.02, min_amp: 0, max_amp: 5}
+    # - {freq: 0.03, min_amp: 0, max_amp: 5}
+    # - {freq: 0.04, min_amp: 0, max_amp: 5}
+    # 2.5-7.5%
+    # - {freq: 0.02, min_amp: 2.5, max_amp: 7}
+    # - {freq: 0.03, min_amp: 2.5, max_amp: 7}
+    # - {freq: 0.04, min_amp: 2.5, max_amp: 7}
+    # 0-7.5%
+    - {freq: 0.02, min_amp: 0, max_amp: 7}
+    - {freq: 0.03, min_amp: 0, max_amp: 7}
+    - {freq: 0.04, min_amp: 0, max_amp: 7}

@@ -1,50 +1,54 @@
 package model
 
 import (
+    "os"
     "fmt"
-    "errors"
     ort "github.com/yalue/onnxruntime_go"
 )
-
-type ModelType int
-const (
-    Transformer ModelType = iota
-)
-
-var modelTypeToPath = map[ModelType]string{
-    Transformer: "model/models/TransformerRegressor.onnx",
-}
-
 
 type Model struct {
     contextLength int
     session *ort.AdvancedSession
-    inputTensor *ort.Tensor[float64]
-    outputTensor *ort.Tensor[float64]
+    inputTensor *ort.Tensor[float32]
+    outputTensor *ort.Tensor[float32]
 }
 
-func New(modelType ModelType, contextLength int) (*Model, error) {
-    path, ok := modelTypeToPath[modelType]
-    if !ok {
-        return nil, errors.New("Unknown model type")
+func PathExists(path string) (bool, error) {
+    _, err := os.Stat(path)
+    if err == nil {
+        return true, nil // Path exists
+    }
+    if os.IsNotExist(err) {
+        return false, nil // Path does not exist
+    }
+    return false, err // Some other error
+}
+
+func New(modelName string, contextLength int) (*Model, error) {
+    // path := "model/models/" + modelName + ".onnx"
+    path := "models/" + modelName + ".onnx"
+    _, err := os.Stat(path)
+    if os.IsNotExist(err) {
+        return nil, err
     }
 
     // environment
-    ort.SetSharedLibraryPath("model/onnxruntime/lib/libonnxruntime.so")
+    // ort.SetSharedLibraryPath("model/onnxruntime/lib/libonnxruntime.so")
+    ort.SetSharedLibraryPath("onnxruntime/lib/libonnxruntime.so")
 
-    err := ort.InitializeEnvironment()
+    err = ort.InitializeEnvironment()
     if err != nil {
         return nil, err
     }
 
     // tensors
-    input := make([]float64, contextLength)
+    input := make([]float32, contextLength)
     inputTensor, err := ort.NewTensor(ort.NewShape(1, int64(contextLength)), input)
     if err != nil {
         return nil, err
     }
 
-    outputTensor, err := ort.NewEmptyTensor[float64](ort.NewShape(1, 1))
+    outputTensor, err := ort.NewEmptyTensor[float32](ort.NewShape(1))
     if err != nil {
         return nil, err
     }
@@ -75,7 +79,12 @@ func (m *Model) Compute(input []float64) (float64, error) {
         return 0.0, fmt.Errorf("Input dimension should match given context length. Got %d and want %d", len(input), m.contextLength)
     }
 
-    copy(m.inputTensor.GetData(), input)
+    modelInput := make([]float32, len(input))
+    for i, v := range input {
+        modelInput[i] = float32(v)
+    }
+
+    copy(m.inputTensor.GetData(), modelInput)
 
     err := m.session.Run()
     if err != nil {
@@ -84,7 +93,7 @@ func (m *Model) Compute(input []float64) (float64, error) {
 
     output := m.outputTensor.GetData()[0]
 
-    return output, nil
+    return float64(output), nil
 }
 
 

@@ -6,14 +6,6 @@ import (
     "os"
 )
 
-type commandFunc func(args []string) error
-var commandStrToFunc = map[string]commandFunc {
-    "move": move,
-    "calibrate": calibrate,
-    "release": release,
-    "run": run,
-}
-
 func exit(err error) {
     fmt.Println(err.Error())
     os.Exit(1)
@@ -24,12 +16,22 @@ func Execute(args []string) {
         exit(fmt.Errorf("[testbench] wrong number of args: expected more than one"))
     }
 
-    command, ok := commandStrToFunc[args[0]]
-    if !ok {
+    var err error
+    switch args[0] {
+    case "move":
+        err = move(args[1:])
+    case "calibrate":
+        _, err = calibrate(args[1:])
+    case "release":
+        err = release(args[1:])
+    case "run":
+        err = run(args[1:])
+    case "reach":
+        err = reach(args[1:])
+    default:
         exit(fmt.Errorf("[testbench] command not found: %s", args[0]))
     }
 
-    err := command(args[1:])
     if err != nil {
         exit(err)
     }

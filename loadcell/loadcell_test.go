@@ -23,6 +23,7 @@ func TestVoltageSensor(t *testing.T) {
             t.Fatal(err)
         }
 
-        fmt.Println(load)
+        fmt.Printf("\r%.3f", load)
     }
+    fmt.Println()
 }

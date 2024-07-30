@@ -12,6 +12,7 @@ type HallSensorI2C struct {
     offset int
     prevData int
     resetCount int
+    prevValue float64
 }
 
 func NewI2C(address byte, line int) (*HallSensorI2C, error) {
@@ -22,7 +23,7 @@ func NewI2C(address byte, line int) (*HallSensorI2C, error) {
         return nil, err
     }
 
-    hs := &HallSensorI2C{i2cChannel, 0, 0, 0}
+    hs := &HallSensorI2C{i2cChannel, 0, 0, 0, 0}
 
     hs.offset, err = hs.read()
     if err != nil {
@@ -51,7 +52,7 @@ func (hs *HallSensorI2C) read() (int, error) {
 func (hs *HallSensorI2C) Read() (float64, error) {
     data, err := hs.read()
     if err != nil {
-        return -1, err
+        return hs.prevValue, err
     }
 
     diff := float64(data - hs.prevData)
@@ -66,7 +67,10 @@ func (hs *HallSensorI2C) Read() (float64, error) {
     hs.prevData = data
     output := data - hs.offset + hs.resetCount * (MAX_VALUE + 1)
 
-    return -float64(output)*STEP_TO_MM, nil
+    position := -float64(output)*STEP_TO_MM
+    hs.prevValue = position
+
+    return position, nil
 }
 
 func (hs *HallSensorI2C) Close() {

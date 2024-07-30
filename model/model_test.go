@@ -3,32 +3,38 @@ package model
 import (
     "fmt"
     "testing"
+    "time"
+    "goraspio/utils"
 )
 
 func TestMain(t *testing.T) {
     contextLength := 1920
-    model, err := New(Transformer, contextLength)
+    model, err := New("TransformerRegressorStrain", contextLength)
     if err != nil {
         t.Fatal(err.Error())
     }
     defer model.Close()
 
-    n_inputs := 5
-    inputs := make([][]float32, n_inputs)
+    n_inputs := 10_000
+    inputs := make([][]float64, n_inputs)
     for i := range n_inputs {
-        input := make([]float32, contextLength)
+        input := make([]float64, contextLength)
         for j := range contextLength {
-            input[j] = 0.5*float32(i+1) + float32(j) * 0.01
+            input[j] = 0.5*float64(i+1) + float64(j) * 0.01
         }
         inputs[i] = input
     }
 
-    for _, input := range inputs {
-        result, err := model.Compute(input)
+    times := make([]float64, n_inputs)
+    for i, input := range inputs {
+        before := time.Now()
+        _, err := model.Compute(input)
+        times[i] = time.Since(before).Seconds()*1000
         if err != nil {
             t.Fatal(err.Error())
         }
 
-        fmt.Println(result)
+        // fmt.Println(result)
     }
+    fmt.Printf("time: %.2f +/- %.2f", utils.Mean(times), utils.StdDev(times))
 }

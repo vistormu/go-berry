@@ -2,20 +2,22 @@ package commands
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
-    "math"
 
-    "gopkg.in/yaml.v3"
-    
+	"gopkg.in/yaml.v3"
+
 	"goraspio/client"
 	"goraspio/hallsensor"
+	"goraspio/loadcell"
+	"goraspio/model"
 	"goraspio/motor"
 	"goraspio/refgen"
+	"goraspio/utils"
 	"goraspio/voltagesensor"
-    "goraspio/loadcell"
 )
 
 var configPath string = "programs/nylontestbench/config.yaml"
@@ -62,16 +64,103 @@ func run(args []string) error {
 
     // create signals
     phi := -math.Pi/2
-    signals := make([]refgen.Signal, len(ec.Experiments.Sinusoidal)+len(ec.Experiments.Triangular))
-    for i, s := range ec.Experiments.Sinusoidal {
-        signals[i] = refgen.NewSine((s.MaxAmp-s.MinAmp)/2, s.Freq, phi, (s.MaxAmp-s.MinAmp)/2+s.MinAmp)
+    // signals := make([]refgen.Signal, len(ec.Experiments.Sinusoidal)+len(ec.Experiments.Triangular))
+    // for i, s := range ec.Experiments.Sinusoidal {
+    //     signals[i] = refgen.NewSine((s.MaxAmp-s.MinAmp)/2, s.Freq, phi, (s.MaxAmp-s.MinAmp)/2+s.MinAmp)
+    // }
+    // for i, s := range ec.Experiments.Triangular {
+    //     index := i+len(ec.Experiments.Sinusoidal)
+    //     signals[index] = refgen.NewTriangular((s.MaxAmp-s.MinAmp)/2, s.Freq, phi, s.MinAmp)
+    // }
+
+    // for _, s := range ec.Experiments.Sinusoidal {
+    //     fmt.Printf("[run] running sinusoidal with min amp: %.1f, max amp: %.1f, freq: %.2f\n\n", s.MinAmp, s.MaxAmp, s.Freq)
+
+    //     signal := refgen.NewSine((s.MaxAmp-s.MinAmp)/2, s.Freq, phi, (s.MaxAmp-s.MinAmp)/2+s.MinAmp)
+
+    //     // release
+    //     err = release(args)
+    //     if err != nil {
+    //         return err
+    //     }
+
+    //     // calibration
+    //     voltageInit, err := calibrate([]string{ec.Sensor.InitialLoad})
+    //     if err != nil {
+    //         return err
+    //     }
+
+    //     // reach
+    //     err = reach([]string{fmt.Sprintf("%.2f", s.MinAmp), fmt.Sprintf("%.2f", ec.Sensor.Length)})
+    //     if err != nil {
+    //         return err
+    //     }
+        
+    //     // experiment
+    //     err = exe([]refgen.Signal{signal}, ec.Time.ExeTime, ec.Time.Dt, ec.Sensor.Length, voltageInit, s.MinAmp)
+    //     if err != nil {
+    //         return err
+    //     }
+
+    //     // wait for next experiment
+    //     time.Sleep(time.Second*10)
+    // }
+
+    // for _, s := range ec.Experiments.Triangular {
+    //     fmt.Printf("[run] running triangular with min amp: %.1f, max amp: %.1f, freq: %.2f\n\n", s.MinAmp, s.MaxAmp, s.Freq)
+
+    //     signal := refgen.NewTriangular((s.MaxAmp-s.MinAmp)/2, s.Freq, phi, s.MinAmp)
+
+    //     // release
+    //     err = release(args)
+    //     if err != nil {
+    //         return err
+    //     }
+
+    //     // calibration
+    //     voltageInit, err := calibrate([]string{ec.Sensor.InitialLoad})
+    //     if err != nil {
+    //         return err
+    //     }
+
+    //     // reach
+    //     err = reach([]string{fmt.Sprintf("%.2f", s.MinAmp), fmt.Sprintf("%.2f", ec.Sensor.Length)})
+    //     if err != nil {
+    //         return err
+    //     }
+        
+    //     // experiment
+    //     err = exe([]refgen.Signal{signal}, ec.Time.ExeTime, ec.Time.Dt, ec.Sensor.Length, voltageInit, s.MinAmp)
+    //     if err != nil {
+    //         return err
+    //     }
+
+    //     // wait for next experiment
+    //     time.Sleep(time.Second*10)
+    // }
+
+    //     signals[i] = refgen.NewSine((s.MaxAmp-s.MinAmp)/2, s.Freq, phi, (s.MaxAmp-s.MinAmp)/2+s.MinAmp)
+    mixed_10_20 := []refgen.Signal{
+        refgen.NewSine(2.5/2, 0.01, phi, 2.5/2),
+        refgen.NewSine(2.5/2, 0.02, phi, 2.5/2),
     }
-    for i, s := range ec.Experiments.Triangular {
-        signals[i+len(ec.Experiments.Sinusoidal)] = refgen.NewTriangular((s.MaxAmp-s.MinAmp)/2, s.Freq, phi, (s.MaxAmp-s.MinAmp)/2+s.MinAmp)
+    mixed_15_25 := []refgen.Signal{
+        refgen.NewSine(2.5/2, 0.015, phi, 2.5/2),
+        refgen.NewSine(2.5/2, 0.025, phi, 2.5/2),
+    }
+    mixed_20_30 := []refgen.Signal{
+        refgen.NewSine(2.5/2, 0.02, phi, 2.5/2),
+        refgen.NewSine(2.5/2, 0.03, phi, 2.5/2),
     }
 
-    for i, s := range signals {
-        fmt.Printf("[run] running\n\n")
+    signalsExp := [][]refgen.Signal{
+        mixed_10_20,
+        mixed_15_25,
+        mixed_20_30,
+    }
+
+    for i, s := range signalsExp {
+        fmt.Printf("[run] running experiment %d", i)
 
         // release
         err = release(args)
@@ -80,33 +169,43 @@ func run(args []string) error {
         }
 
         // calibration
-        err = calibrate([]string{ec.Sensor.InitialLoad})
+        voltageInit, err := calibrate([]string{ec.Sensor.InitialLoad})
+        if err != nil {
+            return err
+        }
+
+        // reach
+        err = reach([]string{fmt.Sprintf("%.2f", 0.0), fmt.Sprintf("%.2f", ec.Sensor.Length)})
         if err != nil {
             return err
         }
         
         // experiment
-        err := exe([]refgen.Signal{s}, ec.Time.ExeTime, ec.Time.Dt, ec.Sensor.Length)
+        err = exe(s, ec.Time.ExeTime, ec.Time.Dt, ec.Sensor.Length, voltageInit, 0.0)
         if err != nil {
             return err
         }
 
         // wait for next experiment
-        if i != len(signals) - 1 {
-            time.Sleep(time.Second*10)
-        } 
+        time.Sleep(time.Second*10)
+    }
+
+
+    err = release(args)
+    if err != nil {
+        return err
     }
 
     return nil
 }
 
-func exe(signals []refgen.Signal, exeTime int, dt float64, sensorLength float64) error {
+func exe(signals []refgen.Signal, exeTime int, dt float64, sensorLength float64, voltageInit float64, strainInit float64) error {
     // ==========
     // COMPONENTS
     // ==========
     // Motor
     pwmPinNo := 13
-    freq := 4_500
+    freq := 2000
     dirPinNo := 6
     motor, err := motor.New(pwmPinNo, freq, dirPinNo)
     if err != nil {
@@ -117,7 +216,7 @@ func exe(signals []refgen.Signal, exeTime int, dt float64, sensorLength float64)
     // Voltage Sensor
     vRef := 5.0
     voltageSensorhipSelectNo := 25
-    vs, err := voltagesensor.New(vRef, voltageSensorhipSelectNo)
+    vs, err := voltagesensor.New(vRef, voltageSensorhipSelectNo, voltageInit)
     if err != nil {
         return err
     }
@@ -149,6 +248,16 @@ func exe(signals []refgen.Signal, exeTime int, dt float64, sensorLength float64)
     // Reference generator
     rg := refgen.NewRefGen(signals)
 
+    // Models
+    strainModel, err := model.New("TransformerRegressorStrain", 1920)
+    if err != nil {
+        return err
+    }
+    defer strainModel.Close()
+    voltageWindow := utils.NewWindow(1920)
+    strainModelKf := utils.NewKalmanFilter(0.05, 20, 0.01)
+    strainModelKf.SetInitialEstimate(0)
+
     // ========
     // CHANNELS
     // ========
@@ -161,12 +270,7 @@ func exe(signals []refgen.Signal, exeTime int, dt float64, sensorLength float64)
     // =========
     // VARIABLES
     // =========
-    data := make(map[string]any)
-    prevPositionValue := 0.0
-    voltageInit := 0.0
-    initialVoltageSet := false
-    voltageRel := 0.0
-    voltageFiltRel := 0.0
+    data := make(map[string]float64)
 
     // =========
     // MAIN LOOP
@@ -182,30 +286,26 @@ func exe(signals []refgen.Signal, exeTime int, dt float64, sensorLength float64)
         loopStartTime := time.Now()
 
         // READ
-        voltage, voltageFilt, err := vs.Read() // V
+        vr, err := vs.Read() // V
         if err != nil {
             return err
         }
-        if !initialVoltageSet {
-            voltageInit = voltage
-            initialVoltageSet = true
-        }
-        voltageRel = (voltage-voltageInit) / voltageInit * 100 // (%)
-        voltageFiltRel = (voltageFilt-voltageInit) / voltageInit * 100 // (%)
         
-        position, err := hs.Read() // mm
-        if err != nil {
-            position = prevPositionValue
-        }
-        if position != -1 {
-            prevPositionValue = position
-        }
-        strain := position / sensorLength * 100 // strain (%)
+        position, _ := hs.Read() // mm
+        strain := position / sensorLength * 100 + strainInit // strain (%)
 
         load, loadFilt, err := lc.Read() // N
         if err != nil {
             return err
         }
+
+        // PREDICT
+        voltageWindow.Append(vr.VoltageFiltRel/100)
+        strainPred, err := strainModel.Compute(voltageWindow.Data)
+        if err != nil {
+            return err
+        }
+        strainPred = strainModelKf.Compute(strainPred)
 
         // REFERENCE
         ref := rg.Compute(time.Since(programStartTime).Seconds()) // strain
@@ -222,14 +322,16 @@ func exe(signals []refgen.Signal, exeTime int, dt float64, sensorLength float64)
         data["load"] = load
         data["load_filt"] = loadFilt
 
-        data["voltage"] = voltage
-        data["voltage_filt"] = voltageFilt
-        data["voltage_rel"] = voltageRel
-        data["voltage_filt_rel"] = voltageFiltRel
+        data["voltage"] = vr.Voltage
+        data["voltage_filt"] = vr.VoltageFilt
+        data["voltage_rel"] = vr.VoltageRel
+        data["voltage_filt_rel"] = vr.VoltageFiltRel
 
         data["reference"] = ref
         data["position"] = position
+
         data["strain"] = strain
+        data["strain_pred"] = strainPred
 
         err = c.Send(data)
         if err != nil {
@@ -241,7 +343,7 @@ func exe(signals []refgen.Signal, exeTime int, dt float64, sensorLength float64)
         timeFromStart = time.Since(programStartTime).Seconds()
 
         // PRINT
-        fmt.Printf("\rtime per iteration: %.3f ms | execution time: %.0f s", timePerIteration, timeFromStart)
+        fmt.Printf("\rtime per iteration: %.3f ms | execution time: %.0f/%d s", timePerIteration, timeFromStart, exeTime)
     }}
     fmt.Println("\n\nExperiment finalized")
 
