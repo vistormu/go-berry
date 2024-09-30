@@ -26,3 +26,26 @@ func TestMcp3201(t *testing.T) {
         fmt.Println(vr.Voltage)
     }
 }
+
+func TestAs5048b(t *testing.T) {
+    hs, err := NewAs5048b(0x40, 1)
+    if err != nil {
+        t.Fatal(err)
+    }
+    defer hs.Close()
+    
+    exeTime := 30.0
+    dt := 0.1
+    ticker := time.NewTicker(time.Duration(dt*float64(time.Second)))
+
+    for range int(exeTime/dt) {
+        <- ticker.C
+
+        _, err := hs.Read()
+        if err != nil {
+            t.Fatal(err)
+        }
+
+        // fmt.Println(angle)
+    }
+}

@@ -32,17 +32,16 @@ func NewAs5048b(address byte, line int) (*As5048b, error) {
 }
 
 func (s *As5048b) read() (int, error) {
-    highByte, err := s.i2cChannel.ReadRegU8(0x00)
+    highByte, err := s.i2cChannel.ReadRegU8(0xFF)
     if err != nil {
         return -1, err
     }
-    lowByte, err := s.i2cChannel.ReadRegU8(0x01)
+    lowByte, err := s.i2cChannel.ReadRegU8(0x0FE)
     if err != nil {
         return -1, err
     }
 
-    value := (uint16(highByte) << 8) | uint16(lowByte)
-    value = value & 0x3FFF
+    value := (uint16(highByte) << 6) | (uint16(lowByte) & 0x3F)
 
     return int(value), nil
 }
