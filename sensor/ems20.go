@@ -1,17 +1,17 @@
-package loadcell
+package sensor
 
 import (
 	"goraspio/digitalio"
 	"goraspio/utils"
 )
 
-type LoadCell struct {
+type Ems20 struct {
     spi digitalio.Spi
     kf *utils.KalmanFilter
     mf *utils.MedianFilter
 }
 
-func New(chipSelectPinNo int) (*LoadCell, error) {
+func NewEms20(chipSelectPinNo int) (*Ems20, error) {
     spi, err := digitalio.NewSpi(chipSelectPinNo)
     if err != nil {
         return nil, err
@@ -28,7 +28,7 @@ func New(chipSelectPinNo int) (*LoadCell, error) {
 
     mf := utils.NewMedianFilter(5)
     
-    lc :=  &LoadCell{
+    lc :=  &Ems20{
         spi: spi,
         kf: kf,
         mf: mf,
@@ -43,7 +43,7 @@ func New(chipSelectPinNo int) (*LoadCell, error) {
     return lc, nil
 }
 
-func (lc *LoadCell) read() (float64, error) {
+func (lc *Ems20) read() (float64, error) {
     // read bytes
     data, err := lc.spi.Read()
     if err != nil {
@@ -57,7 +57,7 @@ func (lc *LoadCell) read() (float64, error) {
     return load, nil
 }
 
-func (lc *LoadCell) Read() (float64, float64, error) {
+func (lc *Ems20) Read() (float64, float64, error) {
     load, err := lc.read()
     if err != nil {
         return load, load, nil
@@ -69,6 +69,8 @@ func (lc *LoadCell) Read() (float64, float64, error) {
     return load, loadFilt, nil
 }
 
-func (ld *LoadCell) Close() {
-    ld.spi.Close()
+func (s *Ems20) Close() error {
+    s.spi.Close()
+
+    return nil
 }

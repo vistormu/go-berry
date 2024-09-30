@@ -1,11 +1,11 @@
-package voltagesensor
+package sensor
 
 import (
     "goraspio/digitalio"
     "goraspio/utils"
 )
 
-type VoltageSensor struct {
+type Mcp3201 struct {
     spi digitalio.Spi
     vRef float64
     kf *utils.KalmanFilter
@@ -20,7 +20,7 @@ type VoltageReading struct {
     VoltageFiltRel float64
 }
 
-func New(vRef float64, chipSelectPinNo int, voltageInit float64) (*VoltageSensor, error) {
+func NewMcp3201(vRef float64, chipSelectPinNo int, voltageInit float64) (*Mcp3201, error) {
     spi, err := digitalio.NewSpi(chipSelectPinNo) 
     if err != nil {
         return nil, err
@@ -38,7 +38,7 @@ func New(vRef float64, chipSelectPinNo int, voltageInit float64) (*VoltageSensor
 
     mf := utils.NewMedianFilter(5)
 
-    return &VoltageSensor{
+    return &Mcp3201{
         spi: spi,
         vRef: vRef,
         kf: kf,
@@ -47,38 +47,40 @@ func New(vRef float64, chipSelectPinNo int, voltageInit float64) (*VoltageSensor
     }, nil
 }
 
-func (vs *VoltageSensor) read() (float64, error) {
+func (m *Mcp3201) read() (float64, error) {
     // read bytes
-    data, err := vs.spi.Read()
+    data, err := m.spi.Read()
     if err != nil {
         return 0.0, err
     }
     
     // convert to voltage
     value := ((int(data[0]) & 0x1F) << 7) | (int(data[1]) >> 1)
-    voltage := (float64(value) / 4095) * vs.vRef
+    voltage := (float64(value) / 4095) * m.vRef
 
     return voltage, nil
 }
 
-func (vs *VoltageSensor) Read() (VoltageReading, error) {
-    voltage, err := vs.read()
+func (m *Mcp3201) Read() (VoltageReading, error) {
+    voltage, err := m.read()
     if err != nil {
         return VoltageReading{}, err
     }
 
     // filtering
-    voltageMed := vs.mf.Compute(voltage)
-    voltageFilt := vs.kf.Compute(voltageMed)
+    voltageMed := m.mf.Compute(voltage)
+    voltageFilt := m.kf.Compute(voltageMed)
 
     return VoltageReading{
         Voltage: voltage,
         VoltageFilt: voltageFilt,
-        VoltageRel: (voltage-vs.voltageInit) / vs.voltageInit * 100,
-        VoltageFiltRel: (voltageFilt-vs.voltageInit) / vs.voltageInit *100,
+        VoltageRel: (voltage-m.voltageInit) / m.voltageInit * 100,
+        VoltageFiltRel: (voltageFilt-m.voltageInit) / m.voltageInit *100,
     }, nil
 }
 
-func (vs *VoltageSensor) Close() {
-    vs.spi.Close()
+func (m *Mcp3201) Close() error {
+    m.spi.Close()
+
+    return nil
 }

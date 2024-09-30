@@ -1,4 +1,4 @@
-package loadcell
+package sensor
 
 import (
     "testing"
@@ -6,24 +6,23 @@ import (
     "fmt"
 )
 
-func TestVoltageSensor(t *testing.T) {
-    lc, err := New(24)
+func TestMcp3201(t *testing.T) {
+    vs, err := NewMcp3201(5.0, 25, 0.0)
     if err != nil {
         t.Fatal(err)
     }
-    defer lc.Close()
+    defer vs.Close()
 
     ticker := time.NewTicker(time.Millisecond*10)
 
     for range 10*100 {
         <- ticker.C
 
-        load, _, err := lc.Read()
+        vr, err := vs.Read()
         if err != nil {
             t.Fatal(err)
         }
 
-        fmt.Printf("\r%.3f", load)
+        fmt.Println(vr.Voltage)
     }
-    fmt.Println()
 }
