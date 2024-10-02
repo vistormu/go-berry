@@ -41,11 +41,11 @@ func TestAs5048b(t *testing.T) {
     for range int(exeTime/dt) {
         <- ticker.C
 
-        _, err := hs.Read()
+        angle, err := hs.Read()
         if err != nil {
             t.Fatal(err)
         }
 
-        // fmt.Println(angle)
+        fmt.Println(angle)
     }
 }
