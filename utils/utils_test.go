@@ -22,3 +22,25 @@ func TestPrint(t *testing.T) {
     }
     fmt.Println("\rProcessing 100% complete")
 }
+
+func TestGracefulStopper(t *testing.T) {
+    ticker := time.NewTicker(1 * time.Second)
+    defer ticker.Stop()
+
+    stopper := NewGracefulStopper()
+
+    done := false
+    for !done {
+    select{
+    case <-ticker.C:
+        fmt.Println("Tick")
+
+    case <-stopper.ListenForShutdown():
+        fmt.Println("Shutting down")
+        done = true
+        break
+    }
+    }
+
+    fmt.Println("Done")
+}
