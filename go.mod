@@ -1,4 +1,4 @@
-module goraspio
+module github.com/roboticslab-uc3m/goraspio
 
 go 1.22.2
 

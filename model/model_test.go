@@ -4,7 +4,7 @@ import (
     "fmt"
     "testing"
     "time"
-    "goraspio/utils"
+    "github.com/roboticslab-uc3m/goraspio/utils"
 )
 
 func TestMain(t *testing.T) {

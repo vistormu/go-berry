@@ -2,12 +2,12 @@ package motor
 
 import (
 	"fmt"
-	"goraspio/digitalio"
-	"goraspio/hallsensor"
-	"goraspio/refgen"
 	"math"
 	"testing"
 	"time"
+
+    "github.com/roboticslab-uc3m/goraspio/digitalio"
+    "github.com/roboticslab-uc3m/goraspio/refgen"
 )
 
 

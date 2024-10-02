@@ -1,8 +1,8 @@
 package sensor
 
 import (
-    "goraspio/digitalio"
-    "goraspio/utils"
+	"github.com/roboticslab-uc3m/goraspio/digitalio"
+    "github.com/roboticslab-uc3m/goraspio/utils"
 )
 
 type Mcp3201 struct {

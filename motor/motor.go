@@ -2,9 +2,10 @@ package motor
 
 import (
     "math"
-	"goraspio/digitalio"
-    "goraspio/controller"
-    "goraspio/utils"
+
+    "github.com/roboticslab-uc3m/goraspio/digitalio"
+    "github.com/roboticslab-uc3m/goraspio/controller"
+    "github.com/roboticslab-uc3m/goraspio/utils"
 )
 
 const (

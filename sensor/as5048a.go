@@ -1,7 +1,7 @@
 package sensor
 
 import (
-	"goraspio/digitalio"
+	"github.com/roboticslab-uc3m/goraspio/digitalio"
 )
 
 type As5048a struct {

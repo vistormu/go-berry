@@ -1,7 +1,7 @@
 package controller
 
 import (
-    "goraspio/utils"
+    "github.com/roboticslab-uc3m/goraspio/utils"
 )
 
 type Pid struct {

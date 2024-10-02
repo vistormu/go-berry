@@ -1,10 +1,11 @@
 package refgen
 
 import (
-	"goraspio/client"
 	"testing"
 	"time"
     "math"
+
+    "github.com/roboticslab-uc3m/goraspio/client"
 )
 
 func TestMain(t *testing.T) {
