@@ -1,6 +1,7 @@
 package sensor
 
 import (
+    "fmt"
 	"github.com/roboticslab-uc3m/goraspio/digitalio"
     "github.com/roboticslab-uc3m/goraspio/utils"
 )
@@ -23,7 +24,7 @@ type VoltageReading struct {
 func NewMcp3201(vRef float64, chipSelectPinNo int, voltageInit float64) (*Mcp3201, error) {
     spi, err := digitalio.NewSpi(chipSelectPinNo) 
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("error opening communication channel\n%v", err)
     }
     
     processVariance := 0.05
@@ -51,7 +52,7 @@ func (m *Mcp3201) read() (float64, error) {
     // read bytes
     data, err := m.spi.Read()
     if err != nil {
-        return 0.0, err
+        return 0.0, fmt.Errorf("error reading channel\n%v", err)
     }
     
     // convert to voltage
@@ -64,7 +65,7 @@ func (m *Mcp3201) read() (float64, error) {
 func (m *Mcp3201) Read() (VoltageReading, error) {
     voltage, err := m.read()
     if err != nil {
-        return VoltageReading{}, err
+        return VoltageReading{}, fmt.Errorf("error reading value\n%v", err)
     }
 
     // filtering

@@ -27,7 +27,7 @@ func NewPwm(pinNo int, freq int) (Pwm, error) {
 
 func (p Pwm) Write(dutyCycle int) error {
     if dutyCycle < 0 || dutyCycle > 100 {
-        return fmt.Errorf("Duty cycle must be between 0 and 100")
+        return fmt.Errorf("uty cycle must be between 0 and 100, got: %d\n", dutyCycle)
     }
 
     // TMP

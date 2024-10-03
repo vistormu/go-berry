@@ -2,6 +2,7 @@ package sensor
 
 import (
     "math"
+    "fmt"
     "github.com/d2r2/go-i2c"
     "github.com/d2r2/go-logger"
 )
@@ -25,14 +26,14 @@ func NewAs5311(address byte, line int) (*As5311, error) {
 
     i2cChannel, err := i2c.NewI2C(address, line)
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("error opening communication channel\n%v", err)
     }
 
     s := &As5311{i2cChannel, 0, 0, 0, 0}
 
     s.offset, err = s.read()
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("error reading initial value\n%v", err)
     }
     s.prevData = s.offset
 
@@ -42,11 +43,11 @@ func NewAs5311(address byte, line int) (*As5311, error) {
 func (s *As5311) read() (int, error) {
     highByte, err := s.i2cChannel.ReadRegU8(0x00)
     if err != nil {
-        return -1, err
+        return -1, fmt.Errorf("error reading 0x00 channel\n%v", err)
     }
     lowByte, err := s.i2cChannel.ReadRegU8(0x01)
     if err != nil {
-        return -1, err
+        return -1, fmt.Errorf("error reading 0x01 channel\n%v", err)
     }
 
     value := (int(highByte) << 4) | (int(lowByte) >> 4)
@@ -57,7 +58,7 @@ func (s *As5311) read() (int, error) {
 func (s *As5311) Read() (float64, error) {
     data, err := s.read()
     if err != nil {
-        return s.prevValue, err
+        return s.prevValue, fmt.Errorf("error reading value\n%v", err)
     }
 
     diff := float64(data - s.prevData)
@@ -86,4 +87,3 @@ func (s *As5311) Close() error {
 
     return nil
 }
-

@@ -1,6 +1,7 @@
 package sensor
 
 import (
+    "fmt"
     "github.com/d2r2/go-i2c"
     "github.com/d2r2/go-logger"
 )
@@ -17,14 +18,14 @@ func NewAs5048b(address byte, line int) (*As5048b, error) {
 
     i2cChannel, err := i2c.NewI2C(address, line)
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("error opening communication channel\n%v", err)
     }
 
     s := &As5048b{i2cChannel, 0, 0, 0}
 
     s.offset, err = s.read()
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("error reading initial value\n%v", err)
     }
     s.prevData = s.offset
 
@@ -34,11 +35,11 @@ func NewAs5048b(address byte, line int) (*As5048b, error) {
 func (s *As5048b) read() (int, error) {
     highByte, err := s.i2cChannel.ReadRegU8(0xFF)
     if err != nil {
-        return -1, err
+        return -1, fmt.Errorf("error reading 0xFF channel\n%v", err)
     }
     lowByte, err := s.i2cChannel.ReadRegU8(0x0FE)
     if err != nil {
-        return -1, err
+        return -1, fmt.Errorf("error reading 0x0FE channel\n%v", err)
     }
 
     value := (uint16(highByte) << 6) | (uint16(lowByte) & 0x3F)

@@ -1,6 +1,7 @@
 package sensor
 
 import (
+    "fmt"
 	"github.com/roboticslab-uc3m/goraspio/digitalio"
     "github.com/roboticslab-uc3m/goraspio/utils"
 )
@@ -14,7 +15,7 @@ type Ems20 struct {
 func NewEms20(chipSelectPinNo int) (*Ems20, error) {
     spi, err := digitalio.NewSpi(chipSelectPinNo)
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("error opening communication channel\n%v", err)
     }
 
     var processVariance float64 = 0.05
@@ -35,7 +36,7 @@ func NewEms20(chipSelectPinNo int) (*Ems20, error) {
     }
     loadInit, err := lc.read()
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("error reading initial value\n%v", err)
     }
 
     kf.SetInitialEstimate(loadInit)
@@ -47,7 +48,7 @@ func (lc *Ems20) read() (float64, error) {
     // read bytes
     data, err := lc.spi.Read()
     if err != nil {
-        return -1, err
+        return -1, fmt.Errorf("error reading channel\n%v", err)
     }
 
     // convert to N

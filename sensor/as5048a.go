@@ -1,6 +1,7 @@
 package sensor
 
 import (
+    "fmt"
 	"github.com/roboticslab-uc3m/goraspio/digitalio"
 )
 
@@ -14,14 +15,14 @@ type As5048a struct {
 func NewAs5048a(chipSelectNo int) (*As5048a, error) {
     spi, err := digitalio.NewSpi(chipSelectNo)
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("error opening communication channel\n%v", err)
     }
 
     s := &As5048a{spi, 0, 0, 0}
 
     s.offset, err = s.read()
     if err != nil {
-        return nil, err
+        return nil, fmt.Errorf("error reading initial value\n%v", err)
     }
     s.prevData = s.offset
 
@@ -31,7 +32,7 @@ func NewAs5048a(chipSelectNo int) (*As5048a, error) {
 func (s *As5048a) read() (int, error) {
     data, err := s.spi.Read()
     if err != nil {
-        return -1, err
+        return -1, fmt.Errorf("error reading channel\n%v", err)
     }
 
     value := (uint16(data[0]) << 8) | uint16(data[1])
