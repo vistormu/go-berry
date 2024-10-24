@@ -7,7 +7,7 @@ import (
 )
 
 func TestMcp3201(t *testing.T) {
-    vs, err := NewMcp3201(5.0, 25, 0.0)
+    vs, err := NewMcp3201(5.0, 25)
     if err != nil {
         t.Fatal(err)
     }
@@ -18,12 +18,12 @@ func TestMcp3201(t *testing.T) {
     for range 10*100 {
         <- ticker.C
 
-        vr, err := vs.Read()
+        v, err := vs.Read()
         if err != nil {
             t.Fatal(err)
         }
 
-        fmt.Println(vr.Voltage)
+        fmt.Println(v)
     }
 }
 

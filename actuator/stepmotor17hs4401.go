@@ -1,4 +1,4 @@
-package motor
+package actuator
 
 import (
     "math"

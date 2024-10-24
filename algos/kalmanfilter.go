@@ -1,4 +1,4 @@
-package utils
+package algos
 
 type KalmanFilter struct {
     q float64
@@ -8,18 +8,15 @@ type KalmanFilter struct {
     f float64
     h float64
 }
-func NewKalmanFilter(processVariance, measurementVariance, initialErrorCovariance float64) *KalmanFilter {
+func NewKalmanFilter(processVariance, measurementVariance, initialErrorCovariance, initialEstimate float64) *KalmanFilter {
     return &KalmanFilter{
         q: processVariance,
         r: measurementVariance,
         p: initialErrorCovariance,
         f: 1.0,
         h: 1.0,
-        xHat: 0.0,
+        xHat: initialEstimate,
     } 
-}
-func (kf *KalmanFilter) SetInitialEstimate(value float64) {
-    kf.xHat = value
 }
 func (kf *KalmanFilter) Compute(measurement float64) float64 {
     xHatPredict := kf.f * kf.xHat

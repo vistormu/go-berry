@@ -1,6 +1,6 @@
 package sensor
 
 type Sensor interface {
-    Read() (any, error)
+    Read() (float64, error)
     Close() error
 }
