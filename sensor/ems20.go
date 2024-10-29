@@ -2,7 +2,7 @@ package sensor
 
 import (
     "fmt"
-	"github.com/roboticslab-uc3m/goraspio/digitalio"
+	"github.com/vistormu/goraspio/digitalio"
 )
 
 type Ems20 struct {
@@ -34,7 +34,7 @@ func (lc Ems20) read() (int, error) {
     return value, nil
 }
 
-func (lc *Ems20) Read() (float64, error) {
+func (lc Ems20) Read() (float64, error) {
     value, err := lc.read()
     if err != nil {
         return -1.0, fmt.Errorf("error reading value\n%v", err)
@@ -45,7 +45,7 @@ func (lc *Ems20) Read() (float64, error) {
     return load, nil
 }
 
-func (s *Ems20) Close() error {
+func (s Ems20) Close() error {
     s.spi.Close()
 
     return nil

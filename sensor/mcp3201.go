@@ -2,7 +2,7 @@ package sensor
 
 import (
     "fmt"
-	"github.com/roboticslab-uc3m/goraspio/digitalio"
+	"github.com/vistormu/goraspio/digitalio"
 )
 
 type Mcp3201 struct {
@@ -22,8 +22,7 @@ func NewMcp3201(vRef float64, chipSelectPinNo int) (Mcp3201, error) {
     }, nil
 }
 
-func (m *Mcp3201) read() (int, error) {
-    // read bytes
+func (m Mcp3201) read() (int, error) {
     data, err := m.spi.Read()
     if err != nil {
         return 0.0, fmt.Errorf("error reading channel\n%v", err)
@@ -34,7 +33,7 @@ func (m *Mcp3201) read() (int, error) {
     return value, nil
 }
 
-func (m *Mcp3201) Read() (float64, error) {
+func (m Mcp3201) Read() (float64, error) {
     value, err := m.read()
     if err != nil {
         return -1.0, fmt.Errorf("error reading value\n%v", err)
@@ -45,7 +44,7 @@ func (m *Mcp3201) Read() (float64, error) {
     return voltage, nil
 }
 
-func (m *Mcp3201) Close() error {
+func (m Mcp3201) Close() error {
     m.spi.Close()
 
     return nil

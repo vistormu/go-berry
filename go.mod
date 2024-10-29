@@ -1,4 +1,4 @@
-module github.com/roboticslab-uc3m/goraspio
+module github.com/vistormu/goraspio
 
 go 1.22.2
 

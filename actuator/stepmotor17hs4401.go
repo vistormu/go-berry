@@ -2,42 +2,39 @@ package actuator
 
 import (
     "math"
-    "github.com/roboticslab-uc3m/goraspio/digitalio"
+    "github.com/vistormu/goraspio/digitalio"
+    "github.com/vistormu/goraspio/ops"
 )
 
-const (
-    TOLERANCE = 0.05 // mm
-)
-
-type Motor struct {
+type StepMotor17hs4401 struct {
     pwm digitalio.Pwm
     direction digitalio.DigitalOut
 }
 
 
-func New(pwmPinNo, freq, directionPinNo int) (Motor, error) {
+func NewStepMotor17hs4401(pwmPinNo, freq, directionPinNo int) (StepMotor17hs4401, error) {
     pwm, err := digitalio.NewPwm(pwmPinNo, freq)
     if err != nil {
-        return Motor{}, err
+        return StepMotor17hs4401{}, err
     }
     
     direction := digitalio.NewDigitalOut(directionPinNo, digitalio.Low)
 
-    return Motor{pwm, direction}, nil
+    return StepMotor17hs4401{pwm, direction}, nil
 }
 
-func (m Motor) Write(value float64) error {
-    sign := math.Signbit(value)
-
-    // direction
-    if sign {
+func (m StepMotor17hs4401) Write(value float64) error {
+    if math.Signbit(value) {
         m.direction.Write(digitalio.High) // negative error
     } else {
         m.direction.Write(digitalio.Low) // positive error
     }
 
     // write
-    err := m.pwm.Write(int(value))
+    pwmValue := int(math.Abs(value))
+    pwmValue = ops.Clip(pwmValue, 0, 100)
+
+    err := m.pwm.Write(pwmValue)
     if err != nil {
         return err
     }
@@ -45,7 +42,7 @@ func (m Motor) Write(value float64) error {
     return nil
 }
 
-func (m Motor) Close() error {
+func (m StepMotor17hs4401) Close() error {
     m.pwm.Close()
     m.direction.Close()
 

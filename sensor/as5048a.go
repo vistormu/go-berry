@@ -2,7 +2,7 @@ package sensor
 
 import (
     "fmt"
-	"github.com/roboticslab-uc3m/goraspio/digitalio"
+	"github.com/vistormu/goraspio/digitalio"
 )
 
 type As5048a struct {

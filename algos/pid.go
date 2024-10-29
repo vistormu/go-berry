@@ -1,7 +1,7 @@
 package algos
 
 import (
-    "github.com/roboticslab-uc3m/goraspio/ops"
+    "github.com/vistormu/goraspio/ops"
 )
 
 type Pid struct {
