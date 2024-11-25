@@ -50,6 +50,14 @@ func (do DigitalOut) Toggle() PinState {
     return Low
 }
 
+func (do DigitalOut) Read() PinState {
+    state := do.pin.Read()
+    if state == rpio.Low {
+        return High
+    }
+    return Low
+}
+
 func (do DigitalOut) Close() {
     do.pin.Low()
 }

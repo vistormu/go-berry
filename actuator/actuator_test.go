@@ -1,32 +1,49 @@
 package actuator
 
 import (
+    "fmt"
     "testing"
     "time"
-    "fmt"
+
+    "github.com/vistormu/goraspio/utils"
 )
 
-func Test17hs4401(t *testing.T) {
-    m, err := NewStepMotor17hs4401(18, 500, 15)
+func Test17hs4401Displacement(t *testing.T) {
+    m, err := NewStepMotor17hs4401(18, 15, 10, 10_000)
     if err != nil {
         t.Fatal(err)
     }
     defer m.Close()
 
-    ticker := time.NewTicker(time.Millisecond*10)
+    exeTime := 10.0
+    dt := 0.01
+    ticker := time.NewTicker(time.Duration(dt * float64(time.Second)))
     defer ticker.Stop()
 
-    startTime := time.Now()
+    stopper := utils.NewGracefulStopper()
 
-    for range 1_000 {
-        <- ticker.C
+    speed := 70.0
+    reversed := false
+    pulses := int(exeTime / dt)
 
-        fmt.Println(time.Since(startTime).Seconds())
+    for i := range pulses {
+        select {
+        case <-stopper.Listen():
+            return
 
-        pwm := -100.0
-        err = m.Write(pwm)
-        if err != nil {
-            t.Fatal(err)
+        case <-ticker.C:
+            if i >= pulses / 2 && !reversed {
+                speed = -speed
+                reversed = true
+            }
+
+            err := m.Write(speed)
+            if err != nil {
+                t.Fatalf(err.Error())
+            }
+            
+            exeTime -= dt
+            fmt.Printf("\r%.2f", exeTime)
         }
     }
 }

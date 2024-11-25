@@ -4,10 +4,12 @@ import (
     "os"
     "os/signal"
     "syscall"
+    "sync"
 )
 
 type GracefulStopper struct {
     quit chan os.Signal
+    once sync.Once
 }
 
 func NewGracefulStopper() *GracefulStopper {
@@ -18,6 +20,13 @@ func NewGracefulStopper() *GracefulStopper {
     return stopper
 }
 
-func (gs *GracefulStopper) ListenForShutdown() <-chan os.Signal {
+func (gs *GracefulStopper) Listen() <-chan os.Signal {
     return gs.quit
+}
+
+func (gs *GracefulStopper) Stop() {
+    gs.once.Do(func() {
+        signal.Stop(gs.quit)
+        close(gs.quit)
+    })
 }

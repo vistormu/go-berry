@@ -19,6 +19,13 @@ func Clip[T Number](value, min, max T) T {
     return value
 }
 
+func Abs[T Number](value T) T {
+    if value < 0 {
+        return -value
+    }
+    return value
+}
+
 func Mean[T Number](values []T) T {
     var sum T
     length := len(values)
@@ -50,4 +57,14 @@ func StdDev[T Number](values []T) T {
 
 	variance := varianceSum / T(len(values))
 	return T(math.Sqrt(float64(variance)))
+}
+
+func MapInterval[T Number](value, fromMin, fromMax, toMin, toMax T) T {
+    if fromMin == fromMax {
+        return toMin
+    }
+
+    inputRange := fromMax - fromMin
+    outputRange := toMax - toMin
+    return (value-fromMin)*outputRange/inputRange + toMin
 }

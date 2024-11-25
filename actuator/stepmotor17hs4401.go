@@ -1,50 +1,52 @@
 package actuator
 
 import (
-    "math"
     "github.com/vistormu/goraspio/digitalio"
     "github.com/vistormu/goraspio/ops"
 )
 
 type StepMotor17hs4401 struct {
-    pwm digitalio.Pwm
+    pwm *digitalio.Pwm
     direction digitalio.DigitalOut
+    minFreq int
+    maxFreq int
 }
 
-
-func NewStepMotor17hs4401(pwmPinNo, freq, directionPinNo int) (StepMotor17hs4401, error) {
-    pwm, err := digitalio.NewPwm(pwmPinNo, freq)
-    if err != nil {
-        return StepMotor17hs4401{}, err
+func NewStepMotor17hs4401(stepPinNo, directionPinNo, minFreq, maxFreq int) (*StepMotor17hs4401, error) {
+    motor := &StepMotor17hs4401{
+        pwm: digitalio.NewPwm(stepPinNo),
+        direction: digitalio.NewDigitalOut(directionPinNo, digitalio.Low),
+        minFreq: minFreq,
+        maxFreq: maxFreq,
     }
-    
-    direction := digitalio.NewDigitalOut(directionPinNo, digitalio.Low)
-
-    return StepMotor17hs4401{pwm, direction}, nil
+    return motor, nil
 }
 
-func (m StepMotor17hs4401) Write(value float64) error {
-    if math.Signbit(value) {
-        m.direction.Write(digitalio.High) // negative error
+func (m *StepMotor17hs4401) Write(value float64) error {
+    speed := ops.Clip(int(value), -100, 100)
+    frequency := ops.MapInterval(ops.Abs(speed), 0, 100, m.minFreq, m.maxFreq)
+
+    if speed == 0 {
+        return m.pwm.Write(0)
+    }
+
+    if speed > 0 {
+        m.direction.Write(digitalio.Low)
     } else {
-        m.direction.Write(digitalio.Low) // positive error
+        m.direction.Write(digitalio.High)
     }
 
-    // write
-    pwmValue := int(math.Abs(value))
-    pwmValue = ops.Clip(pwmValue, 0, 100)
-
-    err := m.pwm.Write(pwmValue)
+    err := m.pwm.SetFrequency(frequency)
     if err != nil {
         return err
     }
-
-    return nil
+    
+    return m.pwm.Write(50)
 }
 
-func (m StepMotor17hs4401) Close() error {
+func (m *StepMotor17hs4401) Close() error {
     m.pwm.Close()
     m.direction.Close()
-
+    
     return nil
 }

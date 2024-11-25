@@ -25,16 +25,16 @@ func PathExists(path string) (bool, error) {
 }
 
 func New(modelName string, contextLength int) (*Model, error) {
-    // path := "model/models/" + modelName + ".onnx"
-    path := "models/" + modelName + ".onnx"
+    path := "model/models/" + modelName + ".onnx"
+    // path := "models/" + modelName + ".onnx"
     _, err := os.Stat(path)
     if os.IsNotExist(err) {
         return nil, err
     }
 
     // environment
-    // ort.SetSharedLibraryPath("model/onnxruntime/lib/libonnxruntime.so")
-    ort.SetSharedLibraryPath("onnxruntime/lib/libonnxruntime.so")
+    ort.SetSharedLibraryPath("model/onnxruntime/lib/libonnxruntime.so")
+    // ort.SetSharedLibraryPath("onnxruntime/lib/libonnxruntime.so")
 
     err = ort.InitializeEnvironment()
     if err != nil {
