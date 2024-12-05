@@ -1,15 +1,10 @@
 package gpio
 
 import (
-	"bytes"
-	"encoding/binary"
-	"errors"
 	"os"
-	"reflect"
 	"sync"
 	"syscall"
 	"time"
-	"unsafe"
 )
 
 type Mode uint8
@@ -47,15 +42,6 @@ var (
 
 	irqsBackup uint64
 )
-
-func init() {
-	base := getBase()
-	gpioBase = base + gpioOffset
-	clkBase = base + clkOffset
-	pwmBase = base + pwmOffset
-	spiBase = base + spiOffset
-	intrBase = base + intrOffset
-}
 
 // Pin mode, a pin can be set in Input or Output, Clock or Pwm mode
 const (
@@ -115,14 +101,89 @@ var (
 	intrMem8 []uint8
 )
 
+func init() {
+	base := getBase()
+	gpioBase = base + gpioOffset
+	clkBase = base + clkOffset
+	pwmBase = base + pwmOffset
+	spiBase = base + spiOffset
+	intrBase = base + intrOffset
+
+    open()
+}
+
+// Open and memory map GPIO memory range from /dev/mem .
+// Some reflection magic is used to convert it to a unsafe []uint32 pointer
+func open() (err error) {
+	var file *os.File
+
+	// Open fd for rw mem access; try dev/mem first (need root)
+	file, err = os.OpenFile("/dev/mem", os.O_RDWR|os.O_SYNC, os.ModePerm)
+	if os.IsPermission(err) { // try gpiomem otherwise (some extra functions like clock and pwm setting wont work)
+		file, err = os.OpenFile("/dev/gpiomem", os.O_RDWR|os.O_SYNC, os.ModePerm)
+	}
+	if err != nil {
+		return err
+	}
+	// FD can be closed after memory mapping
+	defer file.Close()
+
+	memlock.Lock()
+	defer memlock.Unlock()
+
+	// Memory map GPIO registers to slice
+	gpioMem, gpioMem8, err = memMap(file.Fd(), gpioBase)
+	if err != nil {
+		return err
+	}
+
+	// Memory map clock registers to slice
+	clkMem, clkMem8, err = memMap(file.Fd(), clkBase)
+	if err != nil {
+		return err
+	}
+
+	// Memory map pwm registers to slice
+	pwmMem, pwmMem8, err = memMap(file.Fd(), pwmBase)
+	if err != nil {
+		return err
+	}
+
+	// Memory map spi registers to slice
+	spiMem, spiMem8, err = memMap(file.Fd(), spiBase)
+	if err != nil {
+		return err
+	}
+
+	// Memory map interruption registers to slice
+	intrMem, intrMem8, err = memMap(file.Fd(), intrBase)
+	if err != nil {
+		return err
+	}
+
+	backupIRQs() // back up enabled IRQs, to restore it later
+
+	return nil
+}
+
+// Close unmaps GPIO memory
+func Close() error {
+	EnableIRQs(irqsBackup) // Return IRQs to state where it was before - just to be nice
+
+	memlock.Lock()
+	defer memlock.Unlock()
+	for _, mem8 := range [][]uint8{gpioMem8, clkMem8, pwmMem8, spiMem8, intrMem8} {
+		if err := syscall.Munmap(mem8); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+
 // Input: Set pin as Input
 func (pin Pin) Input() {
 	PinMode(pin, Input)
-}
-
-// Output: Set pin as Output
-func (pin Pin) Output() {
-	PinMode(pin, Output)
 }
 
 // Clock: Set pin as Clock
@@ -133,21 +194,6 @@ func (pin Pin) Clock() {
 // Pwm: Set pin as Pwm
 func (pin Pin) Pwm() {
 	PinMode(pin, Pwm)
-}
-
-// High: Set pin High
-func (pin Pin) High() {
-	WritePin(pin, High)
-}
-
-// Low: Set pin Low
-func (pin Pin) Low() {
-	WritePin(pin, Low)
-}
-
-// Toggle pin state
-func (pin Pin) Toggle() {
-	TogglePin(pin)
 }
 
 // Freq: Set frequency of Clock or Pwm pin (see doc of SetFreq)
@@ -169,16 +215,6 @@ func (pin Pin) DutyCycleWithPwmMode(dutyLen, cycleLen uint32, mode bool) {
 // Mode: Set pin Mode
 func (pin Pin) Mode(mode Mode) {
 	PinMode(pin, mode)
-}
-
-// Write: Set pin state (high/low)
-func (pin Pin) Write(state State) {
-	WritePin(pin, state)
-}
-
-// Read pin state (high/low)
-func (pin Pin) Read() State {
-	return ReadPin(pin)
 }
 
 // Pull: Set a given pull up/down mode
@@ -308,58 +344,6 @@ func PinMode(pin Pin, mode Mode) {
 	const pinMask = 7 // 111 - pinmode is 3 bits
 
 	gpioMem[fselReg] = (gpioMem[fselReg] &^ (pinMask << shift)) | (f << shift)
-}
-
-// WritePin sets a given pin High or Low
-// by setting the clear or set registers respectively
-func WritePin(pin Pin, state State) {
-	p := uint8(pin)
-
-	// Set register, 7 / 8 depending on bank
-	// Clear register, 10 / 11 depending on bank
-	setReg := p/32 + 7
-	clearReg := p/32 + 10
-
-	memlock.Lock()
-
-	if state == Low {
-		gpioMem[clearReg] = 1 << (p & 31)
-	} else {
-		gpioMem[setReg] = 1 << (p & 31)
-	}
-	memlock.Unlock() // not deferring saves ~600ns
-}
-
-// ReadPin reads the state of a pin
-func ReadPin(pin Pin) State {
-	// Input level register offset (13 / 14 depending on bank)
-	levelReg := uint8(pin)/32 + 13
-
-	if (gpioMem[levelReg] & (1 << uint8(pin&31))) != 0 {
-		return High
-	}
-
-	return Low
-}
-
-// TogglePin: Toggle a pin state (high -> low -> high)
-func TogglePin(pin Pin) {
-	p := uint8(pin)
-
-	setReg := p/32 + 7
-	clearReg := p/32 + 10
-	levelReg := p/32 + 13
-
-	bit := uint32(1 << (p & 31))
-
-	memlock.Lock()
-
-	if (gpioMem[levelReg] & bit) != 0 {
-		gpioMem[clearReg] = bit
-	} else {
-		gpioMem[setReg] = bit
-	}
-	memlock.Unlock()
 }
 
 // DetectEdge: Enable edge event detection on pin.
@@ -661,146 +645,4 @@ func DisableIRQs(irqs uint64) {
 	const irqDisable2 = 0x220 / 4
 	intrMem[irqDisable1] = uint32(irqs)       // IRQ 0..31
 	intrMem[irqDisable2] = uint32(irqs >> 32) // IRQ 32..63
-}
-
-func backupIRQs() {
-	const irqEnable1 = 0x210 / 4
-	const irqEnable2 = 0x214 / 4
-	irqsBackup = uint64(intrMem[irqEnable2])<<32 | uint64(intrMem[irqEnable1])
-}
-
-// Open and memory map GPIO memory range from /dev/mem .
-// Some reflection magic is used to convert it to a unsafe []uint32 pointer
-func Open() (err error) {
-	var file *os.File
-
-	// Open fd for rw mem access; try dev/mem first (need root)
-	file, err = os.OpenFile("/dev/mem", os.O_RDWR|os.O_SYNC, os.ModePerm)
-	if os.IsPermission(err) { // try gpiomem otherwise (some extra functions like clock and pwm setting wont work)
-		file, err = os.OpenFile("/dev/gpiomem", os.O_RDWR|os.O_SYNC, os.ModePerm)
-	}
-	if err != nil {
-		return
-	}
-	// FD can be closed after memory mapping
-	defer file.Close()
-
-	memlock.Lock()
-	defer memlock.Unlock()
-
-	// Memory map GPIO registers to slice
-	gpioMem, gpioMem8, err = memMap(file.Fd(), gpioBase)
-	if err != nil {
-		return
-	}
-
-	// Memory map clock registers to slice
-	clkMem, clkMem8, err = memMap(file.Fd(), clkBase)
-	if err != nil {
-		return
-	}
-
-	// Memory map pwm registers to slice
-	pwmMem, pwmMem8, err = memMap(file.Fd(), pwmBase)
-	if err != nil {
-		return
-	}
-
-	// Memory map spi registers to slice
-	spiMem, spiMem8, err = memMap(file.Fd(), spiBase)
-	if err != nil {
-		return
-	}
-
-	// Memory map interruption registers to slice
-	intrMem, intrMem8, err = memMap(file.Fd(), intrBase)
-	if err != nil {
-		return
-	}
-
-	backupIRQs() // back up enabled IRQs, to restore it later
-
-	return nil
-}
-
-func memMap(fd uintptr, base int64) (mem []uint32, mem8 []byte, err error) {
-	mem8, err = syscall.Mmap(
-		int(fd),
-		base,
-		memLength,
-		syscall.PROT_READ|syscall.PROT_WRITE,
-		syscall.MAP_SHARED,
-	)
-	if err != nil {
-		return
-	}
-	// Convert mapped byte memory to unsafe []uint32 pointer, adjust length as needed
-	header := *(*reflect.SliceHeader)(unsafe.Pointer(&mem8))
-	header.Len /= (32 / 8) // (32 bit = 4 bytes)
-	header.Cap /= (32 / 8)
-	mem = *(*[]uint32)(unsafe.Pointer(&header))
-	return
-}
-
-// Close unmaps GPIO memory
-func Close() error {
-	EnableIRQs(irqsBackup) // Return IRQs to state where it was before - just to be nice
-
-	memlock.Lock()
-	defer memlock.Unlock()
-	for _, mem8 := range [][]uint8{gpioMem8, clkMem8, pwmMem8, spiMem8, intrMem8} {
-		if err := syscall.Munmap(mem8); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// Read /proc/device-tree/soc/ranges and determine the base address.
-// Use the default Raspberry Pi 1 base address if this fails.
-func readBase(offset int64) (int64, error) {
-	ranges, err := os.Open("/proc/device-tree/soc/ranges")
-	defer ranges.Close()
-	if err != nil {
-		return 0, err
-	}
-	b := make([]byte, 4)
-	n, err := ranges.ReadAt(b, offset)
-	if n != 4 || err != nil {
-		return 0, err
-	}
-	buf := bytes.NewReader(b)
-	var out uint32
-	err = binary.Read(buf, binary.BigEndian, &out)
-	if err != nil {
-		return 0, err
-	}
-
-	if out == 0 {
-		return 0, errors.New("rpio: GPIO base address not found")
-	}
-	return int64(out), nil
-}
-
-func getBase() int64 {
-	// Pi 2 & 3 GPIO base address is at offset 4
-	b, err := readBase(4)
-	if err == nil {
-		return b
-	}
-
-	// Pi 4 GPIO base address is as offset 8
-	b, err = readBase(8)
-	if err == nil {
-		return b
-	}
-
-	// Default to Pi 1
-	return int64(bcm2835Base)
-}
-
-// The Pi 4 uses a BCM 2711, which has different register offsets and base addresses than the rest of the Pi family (so far).  This
-// helper function checks if we're on a 2711 and hence a Pi 4
-func isBCM2711() bool {
-	return gpioMem[GPPUPPDN3] != 0x6770696f
 }
