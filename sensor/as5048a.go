@@ -1,3 +1,8 @@
+// polarity 0
+// phase 1
+// mode 1
+// spi
+// 14-bits
 package sensor
 
 import (

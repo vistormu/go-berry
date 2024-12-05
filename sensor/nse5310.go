@@ -1,36 +1,39 @@
-// As5311
-// 488 nm resolution
+// Nse5310
+// 0.488 μm resolution
 // 12-bits
-// SSI
+// I2C
 package sensor
 
 import (
     "math"
     "fmt"
-	"github.com/vistormu/goraspio/digitalio"
+    "github.com/d2r2/go-i2c"
+    "github.com/d2r2/go-logger"
 )
 
-// const (
-//     RESET_THRESH = 0.4
-//     MAX_VALUE = 4095
-//     STEP_TO_MM = 0.000488
-// )
+const (
+    RESET_THRESH = 0.4
+    MAX_VALUE = 4095
+    STEP_TO_MM = 0.000488
+)
 
-type As5311 struct {
-    spi digitalio.Spi 
+type Nse5310 struct {
+    i2cChannel *i2c.I2C
     offset int
     prevData int
     resetCount int
     prevValue float64
 }
 
-func NewAs5311(chipSelectNo int) (*As5311, error) {
-    spi, err := digitalio.NewSpi(chipSelectNo)
+func NewNse5310(address byte, line int) (*Nse5310, error) {
+    logger.ChangePackageLogLevel("i2c", logger.FatalLevel)
+
+    i2cChannel, err := i2c.NewI2C(address, line)
     if err != nil {
         return nil, fmt.Errorf("error opening communication channel\n%v", err)
     }
 
-    s := &As5311{spi, 0, 0, 0, 0}
+    s := &Nse5310{i2cChannel, 0, 0, 0, 0}
 
     s.offset, err = s.read()
     if err != nil {
@@ -41,18 +44,22 @@ func NewAs5311(chipSelectNo int) (*As5311, error) {
     return s, nil
 }
 
-func (s *As5311) read() (int, error) {
-    data, err := s.spi.Read()
+func (s *Nse5310) read() (int, error) {
+    highByte, err := s.i2cChannel.ReadRegU8(0x00)
     if err != nil {
-        return -1, fmt.Errorf("error reading channel\n%v", err)
+        return -1, fmt.Errorf("error reading 0x00 channel\n%v", err)
+    }
+    lowByte, err := s.i2cChannel.ReadRegU8(0x01)
+    if err != nil {
+        return -1, fmt.Errorf("error reading 0x01 channel\n%v", err)
     }
 
-    value := (int(data[0]) << 4) | int(data[1] >> 4)
+    value := (int(highByte) << 4) | (int(lowByte) >> 4)
 
-    return int(value), nil
+    return value, nil
 }
 
-func (s *As5311) Read() (float64, error) {
+func (s *Nse5310) Read() (float64, error) {
     data, err := s.read()
     if err != nil {
         return s.prevValue, fmt.Errorf("error reading value\n%v", err)
@@ -76,8 +83,11 @@ func (s *As5311) Read() (float64, error) {
     return position, nil
 }
 
-func (s *As5311) Close() error {
-    s.spi.Close()
+func (s *Nse5310) Close() error {
+    err := s.i2cChannel.Close()
+    if err != nil {
+        return err
+    }
 
     return nil
 }

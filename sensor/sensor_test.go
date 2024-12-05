@@ -8,7 +8,7 @@ import (
 
 
 func TestSensor(t *testing.T) {
-    sensorName := "ems20"
+    sensorName := "as5311"
     var sensor Sensor
     var err error
     switch sensorName {
@@ -16,6 +16,10 @@ func TestSensor(t *testing.T) {
             sensor, err = NewMcp3201(5.0, 24)
         case "ems20":
             sensor, err = NewEms20(23)
+        case "as5048a":
+            sensor, err = NewAs5048a(25)
+        case "as5311":
+            sensor, err = NewAs5311(25)
         default:
             t.Fatal("unknown sensor")
     }
@@ -25,7 +29,7 @@ func TestSensor(t *testing.T) {
     defer sensor.Close()
 
     exeTime := 10.0
-    dt := 0.1
+    dt := 0.001
     ticker := time.NewTicker(time.Duration(dt*float64(time.Second)))
     defer ticker.Stop()
 
@@ -39,5 +43,4 @@ func TestSensor(t *testing.T) {
 
         fmt.Println(value)
     }
-
 }

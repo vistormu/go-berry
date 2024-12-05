@@ -1,7 +1,7 @@
 package digitalio
 
 import (
-    // "time"
+    "time"
     "fmt"
     "github.com/stianeikeland/go-rpio/v4"
 )
@@ -15,8 +15,8 @@ func NewSpi(chipSelectPinNo int) (Spi, error) {
     if err != nil {
         return Spi{}, err
     }
-    // rpio.SpiMode(0, 0)
-    // rpio.SpiSpeed(1e6)
+    rpio.SpiMode(1, 1)
+    // rpio.SpiSpeed(2e6)
 
     do := NewDigitalOut(chipSelectPinNo, High)
 
@@ -27,7 +27,7 @@ func (s Spi) Read() ([]byte, error) {
     s.chipSelect.Toggle()
     defer s.chipSelect.Toggle()
 
-    // time.Sleep(time.Microsecond*10)
+    time.Sleep(time.Microsecond*1)
 
     data := rpio.SpiReceive(2)
     if len(data) != 2 {
