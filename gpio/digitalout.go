@@ -1,5 +1,11 @@
 package gpio
 
+type State uint8
+const (
+	Low State = iota
+	High
+)
+
 type DigitalOut struct {
     pin uint8
     defaultState State
@@ -7,49 +13,33 @@ type DigitalOut struct {
 
 func NewDigitalOut(pinNo int, defaultState State) DigitalOut {
     pin := uint8(pinNo)
+    setPinMode(pin, 1)
 
-    // set pin to output mode
-	fselReg := pin / 10
-	shift := (pin % 10) * 3
-	f := uint32(1)
-    pinMask := uint32(7)
-
-	memlock.Lock()
-	gpioMem[fselReg] = (gpioMem[fselReg] &^ (pinMask << shift)) | (f << shift)
-    memlock.Unlock()
-
-    // digitalout
     do := DigitalOut{
         pin: pin,
         defaultState: defaultState,
     }
 
-    // Write default state
     do.Write(defaultState)
 
     return do
 }
 
-func (do *DigitalOut) Write(state State) {
-	// Set register, 7 / 8 depending on bank
-	// Clear register, 10 / 11 depending on bank
+func (do DigitalOut) Write(state State) {
 	setReg := do.pin / 32 + 7
 	clearReg := do.pin / 32 + 10
 
 	memlock.Lock()
-
     switch state {
     case Low:
         gpioMem[clearReg] = 1 << (do.pin & 31)
     case High:
         gpioMem[setReg] = 1 << (do.pin & 31)
     }
-
-	memlock.Unlock() // not deferring saves ~600ns
+	memlock.Unlock()
 }
 
-func (do *DigitalOut) Read() State {
-	// Input level register offset (13 / 14 depending on bank)
+func (do DigitalOut) Read() State {
 	levelReg := do.pin / 32 + 13
 
 	if (gpioMem[levelReg] & (1 << (do.pin & 31))) != 0 {
@@ -59,7 +49,7 @@ func (do *DigitalOut) Read() State {
 	return Low
 }
 
-func (do *DigitalOut) Toggle() {
+func (do DigitalOut) Toggle() {
     switch do.Read() {
     case Low:
         do.Write(High)
@@ -68,7 +58,7 @@ func (do *DigitalOut) Toggle() {
     }
 }
 
-func (do *DigitalOut) Close() {
+func (do DigitalOut) Close() {
     if do.Read() != do.defaultState {
         do.Toggle()
     }

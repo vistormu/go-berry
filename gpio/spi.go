@@ -20,24 +20,29 @@ const (
 	clkDivReg = 2
 )
 
-var (
-	SpiMapError = errors.New("SPI registers not mapped correctly - are you root?")
+type Mode uint8
+type Pin uint8
+
+const (
+	Input Mode = iota
+	Output
+	Clock
+	Pwmm
+	Spi
+	Alt0
+	Alt1
+	Alt2
+	Alt3
+	Alt4
+	Alt5
 )
 
-// SpiBegin: Sets all pins of given SPI device to SPI mode
-//  dev\pin | CE0 | CE1 | CE2 | SCLK | MOSI | MISO |
-//  Spi0    |   7 |   8 |   - |    9 |   10 |   11 |
-//  Spi1    |  16 |  17 |  18 |   19 |   20 |   21 |
-//  Spi2    |  40 |  41 |  42 |   43 |   44 |   45 |
-//
-// It also resets SPI control register.
-//
 // Note that you should disable SPI interface in raspi-config first!
 func SpiBegin(dev SpiDev) error {
 	spiMem[csReg] = 0 // reset spi settings to default
 	if spiMem[csReg] == 0 {
 		// this should not read only zeroes after reset -> mem map failed
-		return SpiMapError
+		return errors.New("SPI registers not mapped correctly - are you root?")
 	}
 
 	for _, pin := range getSpiPins(dev) {
@@ -191,4 +196,81 @@ func getSpiPins(dev SpiDev) []Pin {
 	default:
 		return []Pin{}
 	}
+}
+
+func (pin Pin) Mode(mode Mode) {
+	PinMode(pin, mode)
+}
+func PinMode(pin Pin, mode Mode) {
+
+	// Pin fsel register, 0 or 1 depending on bank
+	fselReg := uint8(pin) / 10
+	shift := (uint8(pin) % 10) * 3
+	f := uint32(0)
+
+	const in = 0   // 000
+	const out = 1  // 001
+	const alt0 = 4 // 100
+	const alt1 = 5 // 101
+	const alt2 = 6 // 110
+	const alt3 = 7 // 111
+	const alt4 = 3 // 011
+	const alt5 = 2 // 010
+
+	switch mode {
+	case Input:
+		f = in
+	case Output:
+		f = out
+	case Clock:
+		switch pin {
+		case 4, 5, 6, 32, 34, 42, 43, 44:
+			f = alt0
+		case 20, 21:
+			f = alt5
+		default:
+			return
+		}
+	case Pwmm:
+		switch pin {
+		case 12, 13, 40, 41, 45:
+			f = alt0
+		case 18, 19:
+			f = alt5
+		default:
+			return
+		}
+	case Spi:
+		switch pin {
+		case 7, 8, 9, 10, 11: // SPI0
+			f = alt0
+		case 35, 36, 37, 38, 39: // SPI0
+			f = alt0
+		case 16, 17, 18, 19, 20, 21: // SPI1
+			f = alt4
+		case 40, 41, 42, 43, 44, 45: // SPI2
+			f = alt4
+		default:
+			return
+		}
+	case Alt0:
+		f = alt0
+	case Alt1:
+		f = alt1
+	case Alt2:
+		f = alt2
+	case Alt3:
+		f = alt3
+	case Alt4:
+		f = alt4
+	case Alt5:
+		f = alt5
+	}
+
+	memlock.Lock()
+	defer memlock.Unlock()
+
+	const pinMask = 7 // 111 - pinmode is 3 bits
+
+	gpioMem[fselReg] = (gpioMem[fselReg] &^ (pinMask << shift)) | (f << shift)
 }

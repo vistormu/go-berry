@@ -83,3 +83,20 @@ func backupIRQs() {
 	const irqEnable2 = 0x214 / 4
 	irqsBackup = uint64(intrMem[irqEnable2])<<32 | uint64(intrMem[irqEnable1])
 }
+
+func enableIRQs(irqs uint64) {
+	const irqEnable1 = 0x210 / 4
+	const irqEnable2 = 0x214 / 4
+	intrMem[irqEnable1] = uint32(irqs)       // IRQ 0..31
+	intrMem[irqEnable2] = uint32(irqs >> 32) // IRQ 32..63
+}
+
+func setPinMode(pin uint8, f uint32) {
+	fselReg := pin / 10
+	shift := (pin % 10) * 3
+    pinMask := uint32(7)
+
+	memlock.Lock()
+	gpioMem[fselReg] = (gpioMem[fselReg] &^ (pinMask << shift)) | (f << shift)
+    memlock.Unlock()
+}
