@@ -2,7 +2,7 @@ package actuator
 
 import (
     "github.com/vistormu/goraspio/digitalio"
-    "github.com/vistormu/goraspio/ops"
+    "github.com/vistormu/goraspio/num"
 )
 
 type StepMotor17hs4401 struct {
@@ -23,8 +23,8 @@ func NewStepMotor17hs4401(stepPinNo, directionPinNo, minFreq, maxFreq int) (*Ste
 }
 
 func (m *StepMotor17hs4401) Write(value float64) error {
-    speed := ops.Clip(int(value), -100, 100)
-    frequency := ops.MapInterval(ops.Abs(speed), 0, 100, m.minFreq, m.maxFreq)
+    speed := num.Clip(int(value), -100, 100)
+    frequency := num.MapInterval(num.Abs(speed), 0, 100, m.minFreq, m.maxFreq)
 
     if speed == 0 {
         return m.pwm.Write(0)

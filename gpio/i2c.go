@@ -10,7 +10,6 @@
 package gpio
 
 import (
-	"encoding/hex"
 	"fmt"
 	"os"
 	"syscall"

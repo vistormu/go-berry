@@ -43,6 +43,7 @@ func TestPwm(t *testing.T) {
     if err != nil {
         t.Fatal(err)
     }
+    defer pwm.Close()
 
     exeTime := 5.0
     dt := 0.01

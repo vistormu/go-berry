@@ -102,6 +102,7 @@ func (p *Pwm) write(dutyCycle int) {
 	// set duty cycle
 	pwmMem[pwmDatReg] = dutyLen
 	pwmMem[pwmRngReg] = p.cycleLen
+
 	time.Sleep(time.Microsecond * 10)
 }
 func (p *Pwm) Write(dutyCycle int) {
