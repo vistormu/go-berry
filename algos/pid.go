@@ -1,7 +1,7 @@
 package algos
 
 import (
-    "github.com/vistormu/goraspio/ops"
+    "github.com/vistormu/goraspio/num"
 )
 
 type Pid struct {
@@ -20,7 +20,7 @@ func NewPid(kp, ki, kd, dt, alpha float64, integralBounds [2]float64) *Pid {
 
 func (p *Pid) Compute(value float64) float64 {
     p.integral += value * p.dt
-    p.integral = ops.Clip(p.integral, p.integralBounds[0], p.integralBounds[1])
+    p.integral = num.Clip(p.integral, p.integralBounds[0], p.integralBounds[1])
 
     unfiltDerivative := (value - p.prevValue) / p.dt
     p.derivative = p.alpha * unfiltDerivative + (1 - p.alpha) * p.derivative

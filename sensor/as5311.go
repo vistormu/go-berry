@@ -7,7 +7,7 @@ package sensor
 import (
     "math"
     "fmt"
-	"github.com/vistormu/goraspio/digitalio"
+	"github.com/vistormu/goraspio/gpio"
 )
 
 // const (
@@ -17,7 +17,7 @@ import (
 // )
 
 type As5311 struct {
-    spi digitalio.Spi 
+    spi *gpio.Spi 
     offset int
     prevData int
     resetCount int
@@ -25,7 +25,7 @@ type As5311 struct {
 }
 
 func NewAs5311(chipSelectNo int) (*As5311, error) {
-    spi, err := digitalio.NewSpi(chipSelectNo)
+    spi, err := gpio.NewSpi(chipSelectNo, 1, 1, 10_000)
     if err != nil {
         return nil, fmt.Errorf("error opening communication channel\n%v", err)
     }
@@ -42,10 +42,7 @@ func NewAs5311(chipSelectNo int) (*As5311, error) {
 }
 
 func (s *As5311) read() (int, error) {
-    data, err := s.spi.Read()
-    if err != nil {
-        return -1, fmt.Errorf("error reading channel\n%v", err)
-    }
+    data := s.spi.Read(2)
 
     value := (int(data[0]) << 4) | int(data[1] >> 4)
 

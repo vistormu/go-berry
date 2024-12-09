@@ -7,18 +7,18 @@ package sensor
 
 import (
     "fmt"
-	"github.com/vistormu/goraspio/digitalio"
+	"github.com/vistormu/goraspio/gpio"
 )
 
 type As5048a struct {
-    spi digitalio.Spi 
+    spi *gpio.Spi 
     offset int
     prevData int
     resetCount int
 }
 
 func NewAs5048a(chipSelectNo int) (*As5048a, error) {
-    spi, err := digitalio.NewSpi(chipSelectNo)
+    spi, err := gpio.NewSpi(chipSelectNo, 0, 1, 10_000)
     if err != nil {
         return nil, fmt.Errorf("error opening communication channel\n%v", err)
     }
@@ -35,10 +35,7 @@ func NewAs5048a(chipSelectNo int) (*As5048a, error) {
 }
 
 func (s *As5048a) read() (int, error) {
-    data, err := s.spi.Read()
-    if err != nil {
-        return -1, fmt.Errorf("error reading channel\n%v", err)
-    }
+    data := s.spi.Read(2)
 
     value := (uint16(data[0]) << 8) | uint16(data[1])
     angleValue := value & 0x3FFF

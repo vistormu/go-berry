@@ -39,9 +39,24 @@ func (e SpiError) String() string {
     return string(e)
 }
 
+// ===
+// I2C
+// ===
+type I2CError string
+const (
+    // pwm errors
+    I2C_OPEN I2CError = "error opening i2c channel" + END + ITEM + "full error:\n\n%v"
+    I2C_READ I2CError = "error reading from i2c" + END + ITEM + "register: %v" + ITEM + "full error:\n\n%v"
+    I2C_WRITE I2CError = "error writing to i2c" + END + ITEM + "register: %v" + ITEM + "full error:\n\n%v"
+)
+func (e I2CError) String() string {
+    return string(e)
+}
+
 var stageMessages = map[reflect.Type]string{
     reflect.TypeOf(PwmError("")): "|pwm error| ",
     reflect.TypeOf(SpiError("")): "|spi error| ",
+    reflect.TypeOf(I2CError("")): "|i2c error| ",
 }
 
 type Error struct {

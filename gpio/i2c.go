@@ -5,14 +5,11 @@ import (
 	"os"
 
     "github.com/vistormu/goraspio/num"
+    "github.com/vistormu/goraspio/errors"
 )
 
  // #include <linux/i2c-dev.h>
 import "C"
-
-const (
-	I2C_SLAVE = C.I2C_SLAVE
-)
 
 type I2C struct {
 	addr uint8
@@ -23,13 +20,19 @@ type I2C struct {
 func NewI2C(addr uint8, bus int) (*I2C, error) {
 	f, err := os.OpenFile(fmt.Sprintf("/dev/i2c-%d", bus), os.O_RDWR, 0600)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(errors.I2C_OPEN, err.Error())
 	}
-	if err := ioctl(f.Fd(), I2C_SLAVE, uintptr(addr)); err != nil {
-		return nil, err
-	}
-	v := &I2C{rc: f, bus: bus, addr: addr}
-	return v, nil
+
+    err = ioctl(f.Fd(), C.I2C_SLAVE, uintptr(addr))
+    if err != nil {
+        return nil, errors.New(errors.I2C_OPEN, err.Error())
+    }
+
+    return &I2C{
+        rc: f, 
+        bus: bus, 
+        addr: addr,
+    }, nil
 }
 
 func (i *I2C) Read(registers []byte, nBytes []int) ([]byte, error) {
@@ -40,13 +43,13 @@ func (i *I2C) Read(registers []byte, nBytes []int) ([]byte, error) {
 
         _, err := i.rc.Write([]byte{reg})
         if err != nil {
-            return nil, err
+            return nil, errors.New(errors.I2C_READ, reg, err.Error())
         }
 
         buf := make([]byte, n)
         _, err = i.rc.Read(buf)
         if err != nil {
-            return nil, err
+            return nil, errors.New(errors.I2C_READ, reg, err.Error())
         }
 
         for i, value := range buf {
@@ -61,8 +64,9 @@ func (i *I2C) Write(reg byte, value byte) error {
 	buf := []byte{reg, value}
 	_, err := i.rc.Write(buf)
 	if err != nil {
-		return err
+		return errors.New(errors.I2C_WRITE, reg, err.Error())
 	}
+
 	return nil
 }
 

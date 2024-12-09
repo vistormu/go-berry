@@ -2,15 +2,15 @@ package sensor
 
 import (
     "fmt"
-	"github.com/vistormu/goraspio/digitalio"
+	"github.com/vistormu/goraspio/gpio"
 )
 
 type Ems20 struct {
-    spi digitalio.Spi
+    spi *gpio.Spi
 }
 
 func NewEms20(chipSelectPinNo int) (Ems20, error) {
-    spi, err := digitalio.NewSpi(chipSelectPinNo)
+    spi, err := gpio.NewSpi(chipSelectPinNo, 0, 0, 10_000)
     if err != nil {
         return Ems20{}, fmt.Errorf("error opening communication channel\n%v", err)
     }
@@ -24,10 +24,7 @@ func NewEms20(chipSelectPinNo int) (Ems20, error) {
 
 func (lc Ems20) read() (int, error) {
     // read bytes
-    data, err := lc.spi.Read()
-    if err != nil {
-        return -1, fmt.Errorf("error reading channel\n%v", err)
-    }
+    data := lc.spi.Read(2)
 
     value := ((int(data[0]) & 0x1F) << 7) | (int(data[1]) >> 1)
 
