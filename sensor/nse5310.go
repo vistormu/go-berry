@@ -7,8 +7,7 @@ package sensor
 import (
     "math"
     "fmt"
-    "github.com/d2r2/go-i2c"
-    "github.com/d2r2/go-logger"
+    "github.com/vistormu/goraspio/gpio"
 )
 
 const (
@@ -18,7 +17,7 @@ const (
 )
 
 type Nse5310 struct {
-    i2cChannel *i2c.I2C
+    i2cChannel *gpio.I2C
     offset int
     prevData int
     resetCount int
@@ -26,9 +25,7 @@ type Nse5310 struct {
 }
 
 func NewNse5310(address byte, line int) (*Nse5310, error) {
-    logger.ChangePackageLogLevel("i2c", logger.FatalLevel)
-
-    i2cChannel, err := i2c.NewI2C(address, line)
+    i2cChannel, err := gpio.NewI2C(address, line)
     if err != nil {
         return nil, fmt.Errorf("error opening communication channel\n%v", err)
     }
@@ -45,26 +42,24 @@ func NewNse5310(address byte, line int) (*Nse5310, error) {
 }
 
 func (s *Nse5310) read() (int, error) {
-    highByte, err := s.i2cChannel.ReadRegU8(0x00)
+    data, err := s.i2cChannel.Read([]byte{0x00, 0x01}, []int{1, 1})
     if err != nil {
-        return -1, fmt.Errorf("error reading 0x00 channel\n%v", err)
-    }
-    lowByte, err := s.i2cChannel.ReadRegU8(0x01)
-    if err != nil {
-        return -1, fmt.Errorf("error reading 0x01 channel\n%v", err)
+        return -1, fmt.Errorf("error tmp")
     }
 
-    value := (int(highByte) << 4) | (int(lowByte) >> 4)
+    value := (int(data[0]) << 4) | (int(data[1]) >> 4)
 
     return value, nil
 }
 
-func (s *Nse5310) Read() (float64, error) {
+func (s *Nse5310) Read() float64 {
+    // read from i2c
     data, err := s.read()
     if err != nil {
-        return s.prevValue, fmt.Errorf("error reading value\n%v", err)
+        return s.prevValue
     }
 
+    // calculate reset values
     diff := float64(data - s.prevData)
     change := float64(MAX_VALUE)*(1-RESET_THRESH)
     if diff < 0 && math.Abs(diff) > change {
@@ -80,14 +75,9 @@ func (s *Nse5310) Read() (float64, error) {
     position := -float64(output)*STEP_TO_MM
     s.prevValue = position
 
-    return position, nil
+    return position
 }
 
-func (s *Nse5310) Close() error {
-    err := s.i2cChannel.Close()
-    if err != nil {
-        return err
-    }
-
-    return nil
+func (s *Nse5310) Close() {
+    s.i2cChannel.Close()
 }

@@ -8,20 +8,16 @@ import (
 
 
 func TestSensor(t *testing.T) {
-    sensorName := "mcp3201"
+    sensorName := "nse5310"
     var sensor Sensor
     var err error
     switch sensorName {
-        case "mcp3201":
-            sensor, err = NewMcp3201(5.0, 24)
-        // case "ems20":
-        //     sensor, err = NewEms20(23)
-        // case "as5048a":
-        //     sensor, err = NewAs5048a(25)
-        // case "as5311":
-        //     sensor, err = NewAs5311(25)
-        default:
-            t.Fatal("unknown sensor")
+    case "mcp3201":
+        sensor, err = NewMcp3201(5.0, 24)
+    case "nse5310":
+        sensor, err = NewNse5310(0x40, 1)
+    default:
+        t.Fatal("unknown sensor")
     }
     if err != nil {
         t.Fatal(err)

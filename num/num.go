@@ -67,3 +67,12 @@ func MapInterval[T Number](value, fromMin, fromMax, toMin, toMax T) T {
     outputRange := toMax - toMin
     return (value-fromMin)*outputRange/inputRange + toMin
 }
+
+func Sum[T Number](values []T) T {
+    result := T(0)
+    for _, value := range values {
+        result += value
+    }
+
+    return result
+}

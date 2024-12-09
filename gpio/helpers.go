@@ -110,3 +110,11 @@ func clearSpiTxRxFifo() {
 	const clearTxRx = 1<<5 | 1<<4
 	spiMem[csReg] |= clearTxRx
 }
+
+func ioctl(fd, cmd, arg uintptr) error {
+	_, _, err := syscall.Syscall6(syscall.SYS_IOCTL, fd, cmd, arg, 0, 0, 0)
+	if err != 0 {
+		return err
+	}
+	return nil
+}
