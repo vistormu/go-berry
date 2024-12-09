@@ -4,7 +4,7 @@ import (
     "fmt"
     "testing"
     "time"
-    "github.com/roboticslab-uc3m/goraspio/utils"
+    "github.com/vistormu/goraspio/num"
 )
 
 func TestMain(t *testing.T) {
@@ -36,5 +36,5 @@ func TestMain(t *testing.T) {
 
         // fmt.Println(result)
     }
-    fmt.Printf("time: %.2f +/- %.2f", utils.Mean(times), utils.StdDev(times))
+    fmt.Printf("time: %.2f +/- %.2f", num.Mean(times), num.StdDev(times))
 }
