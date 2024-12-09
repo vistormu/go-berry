@@ -100,3 +100,13 @@ func setPinMode(pin uint8, f uint32) {
 	gpioMem[fselReg] = (gpioMem[fselReg] &^ (pinMask << shift)) | (f << shift)
     memlock.Unlock()
 }
+
+func setSpiDiv(div uint32) {
+	const divMask = 1<<16 - 1 - 1 // cdiv have 16 bits and must be odd (for some reason)
+	spiMem[clkDivReg] = div & divMask
+}
+
+func clearSpiTxRxFifo() {
+	const clearTxRx = 1<<5 | 1<<4
+	spiMem[csReg] |= clearTxRx
+}

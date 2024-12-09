@@ -1,52 +1,51 @@
 package actuator
 
 import (
-    "github.com/vistormu/goraspio/digitalio"
+    "github.com/vistormu/goraspio/gpio"
     "github.com/vistormu/goraspio/num"
 )
 
 type StepMotor17hs4401 struct {
-    pwm *digitalio.Pwm
-    direction digitalio.DigitalOut
+    pwm *gpio.Pwm
+    direction gpio.DigitalOut
     minFreq int
     maxFreq int
 }
 
 func NewStepMotor17hs4401(stepPinNo, directionPinNo, minFreq, maxFreq int) (*StepMotor17hs4401, error) {
+    pwm, err := gpio.NewPwm(stepPinNo)
+    if err != nil {
+        return nil, err
+    }
+
     motor := &StepMotor17hs4401{
-        pwm: digitalio.NewPwm(stepPinNo),
-        direction: digitalio.NewDigitalOut(directionPinNo, digitalio.Low),
+        pwm: pwm,
+        direction: gpio.NewDigitalOut(directionPinNo, gpio.Low),
         minFreq: minFreq,
         maxFreq: maxFreq,
     }
     return motor, nil
 }
 
-func (m *StepMotor17hs4401) Write(value float64) error {
+func (m *StepMotor17hs4401) Write(value float64) {
     speed := num.Clip(int(value), -100, 100)
     frequency := num.MapInterval(num.Abs(speed), 0, 100, m.minFreq, m.maxFreq)
 
     if speed == 0 {
-        return m.pwm.Write(0)
+        m.pwm.Write(0)
     }
 
     if speed > 0 {
-        m.direction.Write(digitalio.Low)
+        m.direction.Write(gpio.Low)
     } else {
-        m.direction.Write(digitalio.High)
+        m.direction.Write(gpio.High)
     }
 
-    err := m.pwm.SetFrequency(frequency)
-    if err != nil {
-        return err
-    }
-    
-    return m.pwm.Write(50)
+    m.pwm.SetFrequency(frequency)
+    m.pwm.Write(50)
 }
 
-func (m *StepMotor17hs4401) Close() error {
+func (m *StepMotor17hs4401) Close() {
     m.pwm.Close()
     m.direction.Close()
-    
-    return nil
 }

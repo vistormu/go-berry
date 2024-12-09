@@ -15,18 +15,33 @@ type ErrorType interface {
     String() string
 }
 
+// ===
+// PWM
+// ===
 type PwmError string
 const (
     // pwm errors
     PWM_PIN PwmError = "wrong pwm pin" + END + ITEM + "got: %v" + ITEM + "available pwm pins: 12, 13, 40, 41, 45 | 18, 19"
 )
-
 func (e PwmError) String() string {
+    return string(e)
+}
+
+// ===
+// SPI
+// ===
+type SpiError string
+const (
+    // pwm errors
+    SPI_ROOT SpiError = "error mapping spi registers" + END + ITEM + "are you root?"
+)
+func (e SpiError) String() string {
     return string(e)
 }
 
 var stageMessages = map[reflect.Type]string{
     reflect.TypeOf(PwmError("")): "|pwm error| ",
+    reflect.TypeOf(SpiError("")): "|spi error| ",
 }
 
 type Error struct {

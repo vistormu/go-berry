@@ -22,7 +22,7 @@ func Test17hs4401Displacement(t *testing.T) {
 
     stopper := utils.NewGracefulStopper()
 
-    speed := 70.0
+    speed := 20.0
     reversed := false
     pulses := int(exeTime / dt)
 
@@ -37,10 +37,7 @@ func Test17hs4401Displacement(t *testing.T) {
                 reversed = true
             }
 
-            err := m.Write(speed)
-            if err != nil {
-                t.Fatalf(err.Error())
-            }
+            m.Write(speed)
             
             exeTime -= dt
             fmt.Printf("\r%.2f", exeTime)

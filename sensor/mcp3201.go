@@ -2,16 +2,16 @@ package sensor
 
 import (
     "fmt"
-	"github.com/vistormu/goraspio/digitalio"
+	"github.com/vistormu/goraspio/gpio"
 )
 
 type Mcp3201 struct {
-    spi digitalio.Spi
+    spi *gpio.Spi
     vRef float64
 }
 
 func NewMcp3201(vRef float64, chipSelectPinNo int) (Mcp3201, error) {
-    spi, err := digitalio.NewSpi(chipSelectPinNo) 
+    spi, err := gpio.NewSpi(chipSelectPinNo, 0, 0, 16_000) 
     if err != nil {
         return Mcp3201{}, fmt.Errorf("error opening communication channel\n%v", err)
     }
@@ -22,30 +22,14 @@ func NewMcp3201(vRef float64, chipSelectPinNo int) (Mcp3201, error) {
     }, nil
 }
 
-func (m Mcp3201) read() (int, error) {
-    data, err := m.spi.Read()
-    if err != nil {
-        return 0.0, fmt.Errorf("error reading channel\n%v", err)
-    }
-    
+func (m Mcp3201) Read() float64 {
+    data := m.spi.Read(2)
     value := ((int(data[0]) & 0x1F) << 7) | (int(data[1]) >> 1)
-
-    return value, nil
-}
-
-func (m Mcp3201) Read() (float64, error) {
-    value, err := m.read()
-    if err != nil {
-        return -1.0, fmt.Errorf("error reading value\n%v", err)
-    }
-
     voltage := (float64(value) / 4095) * m.vRef
 
-    return voltage, nil
+    return voltage
 }
 
-func (m Mcp3201) Close() error {
+func (m Mcp3201) Close() {
     m.spi.Close()
-
-    return nil
 }
