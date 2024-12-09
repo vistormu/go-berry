@@ -6,7 +6,6 @@ package sensor
 
 import (
     "math"
-    "fmt"
 	"github.com/vistormu/goraspio/gpio"
 )
 
@@ -27,14 +26,14 @@ type As5311 struct {
 func NewAs5311(chipSelectNo int) (*As5311, error) {
     spi, err := gpio.NewSpi(chipSelectNo, 1, 1, 10_000)
     if err != nil {
-        return nil, fmt.Errorf("error opening communication channel\n%v", err)
+        return nil, err
     }
 
     s := &As5311{spi, 0, 0, 0, 0}
 
     s.offset, err = s.read()
     if err != nil {
-        return nil, fmt.Errorf("error reading initial value\n%v", err)
+        return nil, err
     }
     s.prevData = s.offset
 
@@ -52,7 +51,7 @@ func (s *As5311) read() (int, error) {
 func (s *As5311) Read() (float64, error) {
     data, err := s.read()
     if err != nil {
-        return s.prevValue, fmt.Errorf("error reading value\n%v", err)
+        return s.prevValue, err
     }
 
     diff := float64(data - s.prevData)

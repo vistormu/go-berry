@@ -1,7 +1,6 @@
 package sensor
 
 import (
-    "fmt"
     "github.com/vistormu/goraspio/gpio"
 )
 
@@ -15,14 +14,14 @@ type As5048b struct {
 func NewAs5048b(address byte, line int) (*As5048b, error) {
     i2c, err := gpio.NewI2C(address, line)
     if err != nil {
-        return nil, fmt.Errorf("error opening communication channel\n%v", err)
+        return nil, err
     }
 
     s := &As5048b{i2c, 0, 0, 0}
 
     s.offset, err = s.read()
     if err != nil {
-        return nil, fmt.Errorf("error reading initial value\n%v", err)
+        return nil, err
     }
     s.prevData = s.offset
 

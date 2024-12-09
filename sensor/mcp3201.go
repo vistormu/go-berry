@@ -1,7 +1,6 @@
 package sensor
 
 import (
-    "fmt"
 	"github.com/vistormu/goraspio/gpio"
 )
 
@@ -13,7 +12,7 @@ type Mcp3201 struct {
 func NewMcp3201(vRef float64, chipSelectPinNo int) (Mcp3201, error) {
     spi, err := gpio.NewSpi(chipSelectPinNo, 0, 0, 16_000) 
     if err != nil {
-        return Mcp3201{}, fmt.Errorf("error opening communication channel\n%v", err)
+        return Mcp3201{}, err
     }
     
     return Mcp3201{

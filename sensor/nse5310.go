@@ -6,7 +6,6 @@ package sensor
 
 import (
     "math"
-    "fmt"
     "github.com/vistormu/goraspio/gpio"
 )
 
@@ -27,14 +26,14 @@ type Nse5310 struct {
 func NewNse5310(address byte, line int) (*Nse5310, error) {
     i2cChannel, err := gpio.NewI2C(address, line)
     if err != nil {
-        return nil, fmt.Errorf("error opening communication channel\n%v", err)
+        return nil, err
     }
 
     s := &Nse5310{i2cChannel, 0, 0, 0, 0}
 
     s.offset, err = s.read()
     if err != nil {
-        return nil, fmt.Errorf("error reading initial value\n%v", err)
+        return nil, err
     }
     s.prevData = s.offset
 
@@ -44,7 +43,7 @@ func NewNse5310(address byte, line int) (*Nse5310, error) {
 func (s *Nse5310) read() (int, error) {
     data, err := s.i2cChannel.Read([]byte{0x00, 0x01}, []int{1, 1})
     if err != nil {
-        return -1, fmt.Errorf("error tmp")
+        return -1, err
     }
 
     value := (int(data[0]) << 4) | (int(data[1]) >> 4)

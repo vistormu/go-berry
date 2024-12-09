@@ -6,7 +6,6 @@
 package sensor
 
 import (
-    "fmt"
 	"github.com/vistormu/goraspio/gpio"
 )
 
@@ -20,14 +19,14 @@ type As5048a struct {
 func NewAs5048a(chipSelectNo int) (*As5048a, error) {
     spi, err := gpio.NewSpi(chipSelectNo, 0, 1, 10_000)
     if err != nil {
-        return nil, fmt.Errorf("error opening communication channel\n%v", err)
+        return nil, err
     }
 
     s := &As5048a{spi, 0, 0, 0}
 
     s.offset, err = s.read()
     if err != nil {
-        return nil, fmt.Errorf("error reading initial value\n%v", err)
+        return nil, err
     }
     s.prevData = s.offset
 
