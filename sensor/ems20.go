@@ -8,22 +8,22 @@ type Ems20 struct {
     spi *gpio.Spi
 }
 
-func NewEms20(chipSelectPinNo int) (Ems20, error) {
+func NewEms20(chipSelectPinNo int) (*Ems20, error) {
     spi, err := gpio.NewSpi(chipSelectPinNo, 0, 0, 10_000)
     if err != nil {
-        return Ems20{}, err
+        return nil, err
     }
 
-    lc :=  Ems20{
+    return &Ems20{
         spi: spi,
-    }
-
-    return lc, nil
+    }, nil
 }
 
 func (lc Ems20) read() (int, error) {
-    // read bytes
-    data := lc.spi.Read(2)
+    data, err := lc.spi.Read(2)
+    if err != nil {
+        return -1, err
+    }
 
     value := ((int(data[0]) & 0x1F) << 7) | (int(data[1]) >> 1)
 
@@ -42,7 +42,10 @@ func (lc Ems20) Read() (float64, error) {
 }
 
 func (s Ems20) Close() error {
-    s.spi.Close()
-
+    err := s.spi.Close()
+    if err != nil {
+        return err
+    }
+    
     return nil
 }

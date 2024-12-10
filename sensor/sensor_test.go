@@ -8,6 +8,7 @@ import (
 
 
 func TestSensor(t *testing.T) {
+    // sensorName := "mcp3201"
     sensorName := "nse5310"
     var sensor Sensor
     var err error
@@ -32,8 +33,12 @@ func TestSensor(t *testing.T) {
     for range int(exeTime/dt) {
         <- ticker.C
 
-        value := sensor.Read()
+        startTime := time.Now()
 
-        fmt.Println(value)
+        value, _ := sensor.Read()
+
+        finish := time.Since(startTime).Seconds() * 1000
+
+        fmt.Printf("\r%.2f V | %.2f ms", value, finish)
     }
 }

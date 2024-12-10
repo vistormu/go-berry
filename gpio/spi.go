@@ -16,24 +16,11 @@ const (
 	done = 1 << 16
 )
 
-type Spi struct {
-    cs DigitalOut
-    clk uint8
-    mosi uint8
-    miso uint8
-    polarity uint8
-    phase uint8
-    speed int
-}
-
-func NewSpi(chipSelectPinNo, polarity, phase, speed int) (*Spi, error) {
-    // begin spi
+func init() {
 	spiMem[csReg] = 0
 	if spiMem[csReg] == 0 {
-		return nil, errors.New(errors.SPI_ROOT)
+		panic(errors.New(errors.SPI_ROOT))
 	}
-
-    cs := NewDigitalOut(chipSelectPinNo, High)
 
     // set pins to spi
     f := uint32(4)
@@ -46,12 +33,18 @@ func NewSpi(chipSelectPinNo, polarity, phase, speed int) (*Spi, error) {
 
 	clearSpiTxRxFifo()
 	setSpiDiv(128)
+}
 
+type Spi struct {
+    cs *DigitalOut
+    polarity uint8
+    phase uint8
+    speed int
+}
+
+func NewSpi(chipSelectPinNo, polarity, phase, speed int) (*Spi, error) {
     return &Spi{
-        cs: cs,
-        clk: clk,
-        mosi: mosi,
-        miso: miso,
+        cs : errors.Must(NewDigitalOut(chipSelectPinNo, High)), // future-proofing
         polarity: uint8(polarity),
         phase: uint8(phase),
         speed: speed,
@@ -100,7 +93,7 @@ func (s *Spi) exchange(data []byte) {
 	spiMem[csReg] &^= ta
 }
 
-func (s *Spi) Read(nBytes int) []byte {
+func (s *Spi) Read(nBytes int) ([]byte, error) {
     s.cs.Toggle()
     defer s.cs.Toggle()
 
@@ -110,17 +103,28 @@ func (s *Spi) Read(nBytes int) []byte {
 	data := make([]byte, nBytes, nBytes)
 	s.exchange(data)
 
-    return data
+    return data, nil
 }
 
-func (s *Spi) Write(data ...byte) {
+func (s *Spi) Write(data ...byte) error {
 	s.exchange(append(data[:0:0], data...))
+
+    return nil
 }
 
-func (s *Spi) Close() {
+func (s *Spi) Close() error {
     f := uint32(0) //input mode
-    setPinMode(s.clk, f)
-    setPinMode(s.mosi, f)
-    setPinMode(s.miso, f)
-    s.cs.Close()
+    clk := uint8(11)
+    setPinMode(clk, f)
+    mosi := uint8(10)
+    setPinMode(mosi, f)
+    miso := uint8(9)
+    setPinMode(miso, f)
+
+    err := s.cs.Close()
+    if err != nil {
+        return err
+    }
+
+    return nil
 }

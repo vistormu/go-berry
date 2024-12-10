@@ -34,7 +34,10 @@ func NewAs5048a(chipSelectNo int) (*As5048a, error) {
 }
 
 func (s *As5048a) read() (int, error) {
-    data := s.spi.Read(2)
+    data, err := s.spi.Read(2)
+    if err != nil {
+        return -1, err
+    }
 
     value := (uint16(data[0]) << 8) | uint16(data[1])
     angleValue := value & 0x3FFF
@@ -54,7 +57,10 @@ func (s *As5048a) Read() (float64, error) {
 }
 
 func (s *As5048a) Close() error {
-    s.spi.Close()
+    err := s.spi.Close()
+    if err != nil {
+        return err
+    }
 
     return nil
 }

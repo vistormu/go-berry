@@ -1,5 +1,9 @@
 package gpio
 
+import (
+    "github.com/vistormu/goraspio/errors"
+)
+
 type State uint8
 const (
 	Low State = iota
@@ -11,21 +15,21 @@ type DigitalOut struct {
     defaultState State
 }
 
-func NewDigitalOut(pinNo int, defaultState State) DigitalOut {
+func NewDigitalOut(pinNo int, defaultState State) (*DigitalOut, error) {
     pin := uint8(pinNo)
     setPinMode(pin, 1)
 
-    do := DigitalOut{
+    do := &DigitalOut{
         pin: pin,
         defaultState: defaultState,
     }
 
     do.Write(defaultState)
 
-    return do
+    return do, nil
 }
 
-func (do DigitalOut) Write(state State) {
+func (do *DigitalOut) Write(state State) error {
 	setReg := do.pin / 32 + 7
 	clearReg := do.pin / 32 + 10
 
@@ -37,20 +41,22 @@ func (do DigitalOut) Write(state State) {
         gpioMem[setReg] = 1 << (do.pin & 31)
     }
 	memlock.Unlock()
+
+    return nil
 }
 
-func (do DigitalOut) Read() State {
+func (do *DigitalOut) Read() (State, error) {
 	levelReg := do.pin / 32 + 13
 
 	if (gpioMem[levelReg] & (1 << (do.pin & 31))) != 0 {
-		return High
+		return High, nil
 	}
 
-	return Low
+	return Low, nil
 }
 
-func (do DigitalOut) Toggle() {
-    switch do.Read() {
+func (do *DigitalOut) Toggle() {
+    switch errors.Must(do.Read()) { // future-proofing
     case Low:
         do.Write(High)
     case High:
@@ -58,8 +64,10 @@ func (do DigitalOut) Toggle() {
     }
 }
 
-func (do DigitalOut) Close() {
-    if do.Read() != do.defaultState {
+func (do *DigitalOut) Close() error {
+    if errors.Must(do.Read()) != do.defaultState { // future-proofing
         do.Toggle()
     }
+
+    return nil
 }

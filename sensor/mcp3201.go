@@ -9,26 +9,35 @@ type Mcp3201 struct {
     vRef float64
 }
 
-func NewMcp3201(vRef float64, chipSelectPinNo int) (Mcp3201, error) {
-    spi, err := gpio.NewSpi(chipSelectPinNo, 0, 0, 16_000) 
+func NewMcp3201(vRef float64, chipSelectPinNo int) (*Mcp3201, error) {
+    spi, err := gpio.NewSpi(chipSelectPinNo, 0, 0, 1.6e6) 
     if err != nil {
-        return Mcp3201{}, err
+        return nil, err
     }
     
-    return Mcp3201{
+    return &Mcp3201{
         spi: spi,
         vRef: vRef,
     }, nil
 }
 
-func (m Mcp3201) Read() float64 {
-    data := m.spi.Read(2)
+func (m Mcp3201) Read() (float64, error) {
+    data, err := m.spi.Read(2)
+    if err != nil {
+        return 0, err
+    }
+
     value := ((int(data[0]) & 0x1F) << 7) | (int(data[1]) >> 1)
     voltage := (float64(value) / 4095) * m.vRef
 
-    return voltage
+    return voltage, nil
 }
 
-func (m Mcp3201) Close() {
-    m.spi.Close()
+func (m Mcp3201) Close() error {
+    err := m.spi.Close()
+    if err != nil {
+        return err
+    }
+
+    return nil
 }

@@ -36,25 +36,30 @@ func NewI2C(addr uint8, bus int) (*I2C, error) {
 }
 
 func (i *I2C) Read(registers []byte, nBytes []int) ([]byte, error) {
+    if len(registers) > 0 && isConsecutive(registers) {
+        startRegister := registers[0]
+        totalBytes := num.Sum(nBytes)
+
+        return i.readBulk(startRegister, totalBytes)
+    }
+
     result := make([]byte, num.Sum(nBytes))
-    for j := range len(registers) {
-        reg := registers[j]
+    offset := 0
+
+    for j, reg := range registers {
         n := nBytes[j]
 
-        _, err := i.rc.Write([]byte{reg})
-        if err != nil {
+        if _, err := i.rc.Write([]byte{reg}); err != nil {
             return nil, errors.New(errors.I2C_READ, reg, err.Error())
         }
 
         buf := make([]byte, n)
-        _, err = i.rc.Read(buf)
-        if err != nil {
+        if _, err := i.rc.Read(buf); err != nil {
             return nil, errors.New(errors.I2C_READ, reg, err.Error())
         }
 
-        for i, value := range buf {
-            result[j+i] = value
-        }
+        copy(result[offset:], buf)
+        offset += n
     }
 
     return result, nil
@@ -71,5 +76,32 @@ func (i *I2C) Write(reg byte, value byte) error {
 }
 
 func (i *I2C) Close() error {
-	return i.rc.Close()
+    err := i.rc.Close()
+    if err != nil {
+        return errors.New(errors.I2C_CLOSE, err.Error())
+    }
+
+	return nil
+}
+
+func (i *I2C) readBulk(startRegister byte, nBytes int) ([]byte, error) {
+    if _, err := i.rc.Write([]byte{startRegister}); err != nil {
+        return nil, errors.New(errors.I2C_READ, startRegister, err.Error())
+    }
+
+    result := make([]byte, nBytes)
+    if _, err := i.rc.Read(result); err != nil {
+        return nil, errors.New(errors.I2C_READ, startRegister, err.Error())
+    }
+
+    return result, nil
+}
+
+func isConsecutive(registers []byte) bool {
+    for i := 1; i < len(registers); i++ {
+        if registers[i] != registers[i-1]+1 {
+            return false
+        }
+    }
+    return true
 }

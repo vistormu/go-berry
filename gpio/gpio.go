@@ -4,6 +4,8 @@ import (
 	"os"
 	"sync"
 	"syscall"
+
+    "github.com/vistormu/goraspio/errors"
 )
 
 const (
@@ -15,9 +17,7 @@ const (
 	intrOffset  = 0x00B000
 
 	memLength = 4096
-)
 
-const (
 	GPPUPPDN0 = 57 // Pin pull-up/down for pins 15:0
 	GPPUPPDN1 = 58 // Pin pull-up/down for pins 31:16
 	GPPUPPDN2 = 59 // Pin pull-up/down for pins 47:32
@@ -56,52 +56,50 @@ func init() {
 	spiBase = base + spiOffset
 	intrBase = base + intrOffset
 
-    open()
+    err := open()
+    if err != nil {
+        panic(err) // not the best but works right now
+    }
 }
 
-func open() (err error) {
+func open() error {
 	var file *os.File
 
-	file, err = os.OpenFile("/dev/mem", os.O_RDWR|os.O_SYNC, os.ModePerm)
+    file, err := os.OpenFile("/dev/mem", os.O_RDWR|os.O_SYNC, os.ModePerm)
 	if os.IsPermission(err) { // try gpiomem otherwise (some extra functions like clock and pwm setting wont work)
 		file, err = os.OpenFile("/dev/gpiomem", os.O_RDWR|os.O_SYNC, os.ModePerm)
 	}
 	if err != nil {
-		return err
+		return errors.New(errors.GPIO_INIT, "mem", err.Error())
 	}
 	defer file.Close()
 
 	memlock.Lock()
 	defer memlock.Unlock()
 
-	// Memory map GPIO registers to slice
 	gpioMem, gpioMem8, err = memMap(file.Fd(), gpioBase)
 	if err != nil {
-		return err
+		return errors.New(errors.GPIO_INIT, "base", err.Error())
 	}
 
-	// Memory map clock registers to slice
 	clkMem, clkMem8, err = memMap(file.Fd(), clkBase)
 	if err != nil {
-		return err
+		return errors.New(errors.GPIO_INIT, "clk", err.Error())
 	}
 
-	// Memory map pwm registers to slice
 	pwmMem, pwmMem8, err = memMap(file.Fd(), pwmBase)
 	if err != nil {
-		return err
+		return errors.New(errors.GPIO_INIT, "pwm", err.Error())
 	}
 
-	// Memory map spi registers to slice
 	spiMem, spiMem8, err = memMap(file.Fd(), spiBase)
 	if err != nil {
-		return err
+		return errors.New(errors.GPIO_INIT, "spi", err.Error())
 	}
 
-	// Memory map interruption registers to slice
 	intrMem, intrMem8, err = memMap(file.Fd(), intrBase)
 	if err != nil {
-		return err
+		return errors.New(errors.GPIO_INIT, "intr", err.Error())
 	}
 
 	backupIRQs() // back up enabled IRQs, to restore it later
@@ -116,8 +114,9 @@ func Close() error {
 	defer memlock.Unlock()
 	for _, mem8 := range [][]uint8{gpioMem8, clkMem8, pwmMem8, spiMem8, intrMem8} {
 		if err := syscall.Munmap(mem8); err != nil {
-			return err
+			return errors.New(errors.GPIO_CLOSE, err.Error())
 		}
 	}
+
 	return nil
 }

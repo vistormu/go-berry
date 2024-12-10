@@ -105,7 +105,7 @@ func (p *Pwm) write(dutyCycle int) {
 
 	time.Sleep(time.Microsecond * 10)
 }
-func (p *Pwm) Write(dutyCycle int) {
+func (p *Pwm) Write(dutyCycle int) error {
     if dutyCycle < 0 || dutyCycle > 100 {
         prevDutyCycle := dutyCycle
         dutyCycle = num.Clip(dutyCycle, 0, 100)
@@ -113,10 +113,14 @@ func (p *Pwm) Write(dutyCycle int) {
     }
 
     p.write(dutyCycle)
+
+    return nil
 }
 
-func (p *Pwm) Close() {
+func (p *Pwm) Close() error {
     p.write(0)  
+
+    return nil
 }
 
 func (p *Pwm) start() {

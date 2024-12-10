@@ -51,11 +51,11 @@ func (s *Nse5310) read() (int, error) {
     return value, nil
 }
 
-func (s *Nse5310) Read() float64 {
+func (s *Nse5310) Read() (float64, error) {
     // read from i2c
     data, err := s.read()
     if err != nil {
-        return s.prevValue
+        return s.prevValue, err
     }
 
     // calculate reset values
@@ -74,9 +74,14 @@ func (s *Nse5310) Read() float64 {
     position := -float64(output)*STEP_TO_MM
     s.prevValue = position
 
-    return position
+    return position, nil
 }
 
-func (s *Nse5310) Close() {
-    s.i2cChannel.Close()
+func (s *Nse5310) Close() error {
+    err := s.i2cChannel.Close()
+    if err != nil {
+        return err
+    }
+
+    return nil
 }

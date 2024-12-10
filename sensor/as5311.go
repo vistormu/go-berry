@@ -41,7 +41,10 @@ func NewAs5311(chipSelectNo int) (*As5311, error) {
 }
 
 func (s *As5311) read() (int, error) {
-    data := s.spi.Read(2)
+    data, err := s.spi.Read(2)
+    if err != nil {
+        return -1, err
+    }
 
     value := (int(data[0]) << 4) | int(data[1] >> 4)
 
@@ -73,7 +76,10 @@ func (s *As5311) Read() (float64, error) {
 }
 
 func (s *As5311) Close() error {
-    s.spi.Close()
+    err := s.spi.Close()
+    if err != nil {
+        return err
+    }
 
     return nil
 }

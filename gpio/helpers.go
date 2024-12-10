@@ -4,10 +4,11 @@ import (
     "os"
 	"bytes"
 	"encoding/binary"
-	"errors"
 	"unsafe"
 	"reflect"
 	"syscall"
+    
+    "github.com/vistormu/goraspio/errors"
 )
 
 // Read /proc/device-tree/soc/ranges and determine the base address.
@@ -16,22 +17,22 @@ func readBase(offset int64) (int64, error) {
 	ranges, err := os.Open("/proc/device-tree/soc/ranges")
 	defer ranges.Close()
 	if err != nil {
-		return 0, err
+		return 0, errors.New(errors.GPIO_BASE, err.Error())
 	}
 	b := make([]byte, 4)
 	n, err := ranges.ReadAt(b, offset)
 	if n != 4 || err != nil {
-		return 0, err
+		return 0, errors.New(errors.GPIO_BASE, err.Error())
 	}
 	buf := bytes.NewReader(b)
 	var out uint32
 	err = binary.Read(buf, binary.BigEndian, &out)
 	if err != nil {
-		return 0, err
+		return 0, errors.New(errors.GPIO_BASE, err.Error())
 	}
 
 	if out == 0 {
-		return 0, errors.New("rpio: GPIO base address not found")
+		return 0, errors.New(errors.GPIO_BASE, "gpio address not found")
 	}
 	return int64(out), nil
 }
