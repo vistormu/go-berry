@@ -1,5 +1,3 @@
-module github.com/vistormu/goraspio
+module github.com/vistormu/go-berry
 
-go 1.22.2
-
-require github.com/yalue/onnxruntime_go v1.10.0
+go 1.23.0
