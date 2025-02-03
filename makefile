@@ -1,4 +1,4 @@
-VERSION = 0.0.7
+VERSION = 0.0.8
 
 upload:
 	git tag -a v$(VERSION) -m "Version $(VERSION)"

@@ -76,7 +76,13 @@ func (s *Spi) setMode() {
     }
 }
 
-func (s *Spi) exchange(data []byte) {
+func (s *Spi) Exchange(data []byte) {
+    s.cs.Toggle()
+    defer s.cs.Toggle()
+
+    s.setSpeed()
+    s.setMode()
+
 	clearSpiTxRxFifo()
 
 	spiMem[csReg] |= ta
@@ -94,20 +100,14 @@ func (s *Spi) exchange(data []byte) {
 }
 
 func (s *Spi) Read(nBytes int) ([]byte, error) {
-    s.cs.Toggle()
-    defer s.cs.Toggle()
-
-    s.setSpeed()
-    s.setMode()
-
 	data := make([]byte, nBytes, nBytes)
-	s.exchange(data)
+	s.Exchange(data)
 
     return data, nil
 }
 
 func (s *Spi) Write(data ...byte) error {
-	s.exchange(append(data[:0:0], data...))
+	s.Exchange(append(data[:0:0], data...))
 
     return nil
 }
