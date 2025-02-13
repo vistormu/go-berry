@@ -5,7 +5,7 @@
 </p>
 
 > [!WARNING]
-> this library is still in development and is not yet ready for use
+> this library is still in development. use it at your own risk :)
 
 _go-berry_ is a go library that contains all common operations for using a raspberry pi with the go programming language. it includes the following communication protocols:
 
@@ -33,6 +33,7 @@ _go-berry_ also includes some extra modules that can be used for different purpo
 - _utils/num_: numeric operations
 - _utils/signal_: useful algorithms for signal processing
 - _peripherals_: functional code for sensors and actuators
+- _ml_: machine learning inference
 
 ## future work
 

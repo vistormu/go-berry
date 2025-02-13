@@ -79,14 +79,32 @@ func (e ClientError) String() string {
     return string(e)
 }
 
+// =====
+// model
+// =====
+type ModelError string
+const (
+    JSON_ENCODE ModelError = "error encoding JSON" + END + FULL
+    MODEL_REQUEST ModelError = "error sending request" + END + FULL
+    STATUS_CODE ModelError = "unexpected status code" + END + ITEM + "got: %v" + ITEM + "status: %v"
+    JSON_DECODE ModelError = "error decoding response" + END + FULL
+    MODEL_PATH ModelError = "model path does not exist" + END + ITEM + "path: %v" + FULL
+    SHAPE_MISMATCH ModelError = "shape mismatch" + END + ITEM + "expected: %v" + ITEM + "got: %v" + FULL
+)
+func (e ModelError) String() string {
+    return string(e)
+}
+
+
 var stageMessages = map[reflect.Type]string{
     reflect.TypeOf(GpioError("")): "|gpio error| ",
     reflect.TypeOf(PwmError("")): "|pwm error| ",
     reflect.TypeOf(SpiError("")): "|spi error| ",
     reflect.TypeOf(I2CError("")): "|i2c error| ",
     reflect.TypeOf(ClientError("")): "|client error| ",
-}
+    reflect.TypeOf(ModelError("")): "|model error| ",
 
+}
 type Error struct {
     message string
 }
