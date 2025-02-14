@@ -4,10 +4,6 @@ import (
     "math"
 )
 
-type Reference interface {
-    Compute(t float64) float64
-}
-
 type BaseWave struct {
     amp    float64
     freq   float64

@@ -8,6 +8,7 @@ type KalmanFilter struct {
     f float64
     h float64
 }
+
 func NewKalmanFilter(processVariance, measurementVariance, initialErrorCovariance, initialEstimate float64) *KalmanFilter {
     return &KalmanFilter{
         q: processVariance,
@@ -18,6 +19,7 @@ func NewKalmanFilter(processVariance, measurementVariance, initialErrorCovarianc
         xHat: initialEstimate,
     } 
 }
+
 func (kf *KalmanFilter) Compute(measurement float64) float64 {
     xHatPredict := kf.f * kf.xHat
     pPredict := kf.f * kf.p * kf.f + kf.q
@@ -27,4 +29,24 @@ func (kf *KalmanFilter) Compute(measurement float64) float64 {
     kf.p = (1 - k * kf.h) * pPredict
 
     return kf.xHat
+}
+
+type MultiKalmanFilter struct {
+	filters []*KalmanFilter
+}
+
+func NewMultiKalmanFilter(processVariance, measurementVariance, initialErrorCovariance, initialEstimate float64, numSignals int) *MultiKalmanFilter {
+	filters := make([]*KalmanFilter, numSignals)
+	for i := 0; i < numSignals; i++ {
+		filters[i] = NewKalmanFilter(processVariance, measurementVariance, initialErrorCovariance, initialEstimate)
+	}
+	return &MultiKalmanFilter{filters: filters}
+}
+
+func (mkf *MultiKalmanFilter) Compute(measurements []float64) []float64 {
+	results := make([]float64, len(measurements))
+	for i, measurement := range measurements {
+		results[i] = mkf.filters[i].Compute(measurement)
+	}
+	return results
 }

@@ -33,3 +33,24 @@ func (mf *MedianFilter) Compute(value float64) float64 {
 	}
 	return (sortedValues[n/2-1] + sortedValues[n/2]) / 2.0
 }
+
+type MultiMedianFilter struct {
+    filters []*MedianFilter
+}
+
+func NewMultiMedianFilter(windowSize int, numSignals int) *MultiMedianFilter {
+    filters := make([]*MedianFilter, numSignals)
+    for i := 0; i < numSignals; i++ {
+        filters[i] = NewMedianFilter(windowSize)
+    }
+    return &MultiMedianFilter{filters: filters}
+}
+
+func (mmf *MultiMedianFilter) Compute(values []float64) []float64 {
+    results := make([]float64, len(values))
+    for i, value := range values {
+        results[i] = mmf.filters[i].Compute(value)
+    }
+
+    return results
+}
