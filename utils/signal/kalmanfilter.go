@@ -35,10 +35,11 @@ type MultiKalmanFilter struct {
 	filters []*KalmanFilter
 }
 
-func NewMultiKalmanFilter(processVariance, measurementVariance, initialErrorCovariance, initialEstimate float64, numSignals int) *MultiKalmanFilter {
+func NewMultiKalmanFilter(processVariance, measurementVariance, initialErrorCovariance float64, initialEstimates []float64) *MultiKalmanFilter {
+    numSignals := len(initialEstimates)
 	filters := make([]*KalmanFilter, numSignals)
 	for i := 0; i < numSignals; i++ {
-		filters[i] = NewKalmanFilter(processVariance, measurementVariance, initialErrorCovariance, initialEstimate)
+		filters[i] = NewKalmanFilter(processVariance, measurementVariance, initialErrorCovariance, initialEstimates[i])
 	}
 	return &MultiKalmanFilter{filters: filters}
 }
