@@ -6,7 +6,7 @@ import (
     "time"
 )
 
-func TestMain(t *testing.T) {
+func TestLocal(t *testing.T) {
     nInputs := 4
     nOutputs := 3
     model, err := NewLocalModel("fnn.onnx", nInputs, nOutputs)
@@ -23,23 +23,17 @@ func TestMain(t *testing.T) {
     fmt.Println(output)
 }
 
-func TestServer(t *testing.T) {
+func TestRemote(t *testing.T) {
     model, _ := NewRemoteModel(
-        "145.94.127.212",
+        "145.94.123.92",
         8080,
         "predict",
         "output",
+        []string{"s0", "s1", "s2", "s3"},
     )
 
     start := time.Now()
-    modelOutput, err := model.Compute(struct {
-        S0 float64 `json:"s0"`
-        S1 float64 `json:"s1"`
-        S2 float64 `json:"s2"`
-        S3 float64 `json:"s3"`
-    }{
-        0.0, 0.0, 0.0, 0.0,
-    })
+    modelOutput, err := model.Compute([]float64{0.2, 0.1, 0.12, 0.0})
     if err != nil {
         t.Fatal(err)
     }

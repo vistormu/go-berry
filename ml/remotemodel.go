@@ -14,9 +14,10 @@ type RemoteModel struct {
     url         string
     responseKey string
     client      *http.Client
+    inputNames  []string
 }
 
-func NewRemoteModel(ip string, port int, endpoint string, responseKey string) (*RemoteModel, error) {
+func NewRemoteModel(ip string, port int, endpoint string, responseKey string, inputNames []string) (*RemoteModel, error) {
     client := &http.Client{
         Timeout: 10 * time.Second, // adjust based on your expected response times
         Transport: &http.Transport{
@@ -30,11 +31,17 @@ func NewRemoteModel(ip string, port int, endpoint string, responseKey string) (*
         url:         fmt.Sprintf("http://%s:%d/%s", ip, port, endpoint),
         responseKey: responseKey,
         client:      client,
+        inputNames:  inputNames,
     }, nil
 }
 
-func (m *RemoteModel) Compute(input any) ([]float64, error) {
-    jsonData, err := json.Marshal(input)
+func (m *RemoteModel) Compute(input []float64) ([]float32, error) {
+    data := make(map[string]float64)
+    for i, name := range m.inputNames {
+        data[name] = input[i]
+    }
+
+    jsonData, err := json.Marshal(data)
     if err != nil {
         return nil, errors.New(errors.JSON_ENCODE, err)
     }
@@ -49,7 +56,7 @@ func (m *RemoteModel) Compute(input any) ([]float64, error) {
         return nil, errors.New(errors.STATUS_CODE, resp.StatusCode, resp.Status)
     }
 
-    var result map[string][]float64
+    var result map[string][]float32
     if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
         return nil, errors.New(errors.JSON_DECODE, err)
     }

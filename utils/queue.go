@@ -1,28 +1,39 @@
 package utils
 
-type Queue struct {
-    Data []float64
-    counter int
+type Queue[T any] struct {
+    Data     []T
+    counter  int
     capacity int
 }
 
-func NewQueue(capacity int) *Queue {
-    return &Queue{
-        Data: make([]float64, capacity),
-        counter: 0,
-        capacity: 0,
+func NewQueue[T any](capacity int) *Queue[T] {
+    return &Queue[T]{
+        Data:     make([]T, capacity),
+        counter:  0,
+        capacity: capacity,
     }
 }
 
-func (w *Queue) Append(element float64) {
-    copy(w.Data, w.Data[1:])
-    w.Data[len(w.Data)-1] = element
+func (q *Queue[T]) Append(element T) {
+    if len(q.Data) > 1 {
+        copy(q.Data, q.Data[1:])
+    }
+    q.Data[len(q.Data)-1] = element
 
-    if !w.Full() {
-        w.counter += 1
+    if !q.Full() {
+        q.counter++
     }
 }
 
-func (w *Queue) Full() bool {
-    return w.counter >= w.capacity
+func (q *Queue[T]) Full() bool {
+    return q.counter >= q.capacity
+}
+
+func (q *Queue[T]) Slice(start, end int) []T {
+    return q.Data[start:end]
+}
+
+func (q *Queue[T]) Clear() {
+    q.Data = make([]T, q.capacity)
+    q.counter = 0
 }

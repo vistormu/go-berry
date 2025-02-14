@@ -1,7 +1,7 @@
 # go-berry: a go library for all raspberry pi communication protocols
 
 <p align="center">
-    <img style="width: 20%" src="assets/goraspio_logo.png">
+    <img style="width: 20%" src="assets/logo.png">
 </p>
 
 > [!WARNING]
