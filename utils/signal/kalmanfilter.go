@@ -1,6 +1,10 @@
 package signal
 
-type KalmanFilter struct {
+import (
+    "github.com/vistormu/go-berry/utils/num"
+)
+
+type KalmanFilter[T num.Number] struct {
     q float64
     r float64
     xHat float64
@@ -9,43 +13,43 @@ type KalmanFilter struct {
     h float64
 }
 
-func NewKalmanFilter(processVariance, measurementVariance, initialErrorCovariance, initialEstimate float64) *KalmanFilter {
-    return &KalmanFilter{
+func NewKalmanFilter[T num.Number](processVariance, measurementVariance, initialErrorCovariance float64, initialEstimate T) *KalmanFilter[T] {
+    return &KalmanFilter[T]{
         q: processVariance,
         r: measurementVariance,
         p: initialErrorCovariance,
         f: 1.0,
         h: 1.0,
-        xHat: initialEstimate,
+        xHat: float64(initialEstimate),
     } 
 }
 
-func (kf *KalmanFilter) Compute(measurement float64) float64 {
+func (kf *KalmanFilter[T]) Compute(measurement T) T {
     xHatPredict := kf.f * kf.xHat
     pPredict := kf.f * kf.p * kf.f + kf.q
     
     k := pPredict * kf.h / (kf.h * pPredict * kf.h + kf.r)
-    kf.xHat = xHatPredict + k * (measurement - kf.h * xHatPredict)
+    kf.xHat = xHatPredict + k * (float64(measurement) - kf.h * xHatPredict)
     kf.p = (1 - k * kf.h) * pPredict
 
-    return kf.xHat
+    return T(kf.xHat)
 }
 
-type MultiKalmanFilter struct {
-	filters []*KalmanFilter
+type MultiKalmanFilter[T num.Number] struct {
+	filters []*KalmanFilter[T]
 }
 
-func NewMultiKalmanFilter(processVariance, measurementVariance, initialErrorCovariance float64, initialEstimates []float64) *MultiKalmanFilter {
+func NewMultiKalmanFilter[T num.Number](processVariance, measurementVariance, initialErrorCovariance float64, initialEstimates []T) *MultiKalmanFilter[T] {
     numSignals := len(initialEstimates)
-	filters := make([]*KalmanFilter, numSignals)
+	filters := make([]*KalmanFilter[T], numSignals)
 	for i := 0; i < numSignals; i++ {
 		filters[i] = NewKalmanFilter(processVariance, measurementVariance, initialErrorCovariance, initialEstimates[i])
 	}
-	return &MultiKalmanFilter{filters: filters}
+	return &MultiKalmanFilter[T]{filters: filters}
 }
 
-func (mkf *MultiKalmanFilter) Compute(measurements []float64) []float64 {
-	results := make([]float64, len(measurements))
+func (mkf *MultiKalmanFilter[T]) Compute(measurements []T) []T {
+	results := make([]T, len(measurements))
 	for i, measurement := range measurements {
 		results[i] = mkf.filters[i].Compute(measurement)
 	}

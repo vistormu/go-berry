@@ -1,31 +1,33 @@
 package signal
 
 import (
-	"sort"
+    "slices"
+    "github.com/vistormu/go-berry/utils/num"
 )
 
-type MedianFilter struct {
+type MedianFilter[T num.Number] struct {
 	windowSize int
-	values     []float64
+	values     []T
 }
 
-func NewMedianFilter(windowSize int) *MedianFilter {
-	return &MedianFilter{
+func NewMedianFilter[T num.Number](windowSize int) *MedianFilter[T] {
+	return &MedianFilter[T]{
 		windowSize: windowSize,
-		values:     make([]float64, 0, windowSize),
+		values:     make([]T, 0, windowSize),
 	}
 }
 
-func (mf *MedianFilter) Compute(value float64) float64 {
+func (mf *MedianFilter[T]) Compute(value T) T {
 	mf.values = append(mf.values, value)
 
 	if len(mf.values) > mf.windowSize {
 		mf.values = mf.values[1:]
 	}
 
-	sortedValues := make([]float64, len(mf.values))
+	sortedValues := make([]T, len(mf.values))
 	copy(sortedValues, mf.values)
-	sort.Float64s(sortedValues)
+
+    slices.Sort(sortedValues)
 
 	n := len(sortedValues)
 	if n%2 == 1 {
@@ -34,20 +36,20 @@ func (mf *MedianFilter) Compute(value float64) float64 {
 	return (sortedValues[n/2-1] + sortedValues[n/2]) / 2.0
 }
 
-type MultiMedianFilter struct {
-    filters []*MedianFilter
+type MultiMedianFilter[T num.Number] struct {
+    filters []*MedianFilter[T]
 }
 
-func NewMultiMedianFilter(windowSize int, numSignals int) *MultiMedianFilter {
-    filters := make([]*MedianFilter, numSignals)
+func NewMultiMedianFilter[T num.Number](windowSize int, numSignals int) *MultiMedianFilter[T] {
+    filters := make([]*MedianFilter[T], numSignals)
     for i := 0; i < numSignals; i++ {
-        filters[i] = NewMedianFilter(windowSize)
+        filters[i] = NewMedianFilter[T](windowSize)
     }
-    return &MultiMedianFilter{filters: filters}
+    return &MultiMedianFilter[T]{filters: filters}
 }
 
-func (mmf *MultiMedianFilter) Compute(values []float64) []float64 {
-    results := make([]float64, len(values))
+func (mmf *MultiMedianFilter[T]) Compute(values []T) []T {
+    results := make([]T, len(values))
     for i, value := range values {
         results[i] = mmf.filters[i].Compute(value)
     }
