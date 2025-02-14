@@ -63,3 +63,7 @@ func (m *RemoteModel) Compute(input []float64) ([]float32, error) {
 
     return result[m.responseKey], nil
 }
+
+func (m *RemoteModel) Close() {
+    m.client.CloseIdleConnections()
+}
