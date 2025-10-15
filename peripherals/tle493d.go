@@ -146,8 +146,6 @@ func (s *Tle493d) update() error {
 
 	s.readBuffer = data
 
-	// fmt.Println(data)
-
 	return nil
 }
 
@@ -187,36 +185,7 @@ func (s *Tle493d) read() (float64, float64, error) {
 	return bx, by, nil
 }
 
-func (s *Tle493d) Read() (float64, float64, error) {
-	err := s.update()
-	if err != nil {
-		return 0.0, 0.0, err
-	}
-
-	bxTop := s.get("bxTop")
-	bxBot := s.get("bxBot")
-	byTop := s.get("byTop")
-	byBot := s.get("byBot")
-
-	// fmt.Print(bxTop, bxTop, "\n")
-
-	bx := combine(bxTop, bxBot)
-	by := combine(byTop, byBot)
-
-	return bx, by, nil
-}
-
-func (s *Tle493d) Position() (float64, error) {
-	// UNDER DEVELOPMENT
-	bx, _, err := s.read()
-	if err != nil {
-		return s.prevAngle, err
-	}
-
-	return bx, nil
-}
-
-func (s *Tle493d) Angle() (float64, error) {
+func (s *Tle493d) Read() (float64, error) {
 	bx, by, err := s.read()
 	if err != nil {
 		return s.prevAngle, err
@@ -224,11 +193,7 @@ func (s *Tle493d) Angle() (float64, error) {
 
 	angle := math.Atan2(by, bx)
 	angle *= 180 / math.Pi
-	// angle = math.Mod(angle + 360, 360)
-
 	s.prevAngle = angle
-
-	fmt.Println(angle)
 
 	return angle, nil
 }
