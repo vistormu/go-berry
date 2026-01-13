@@ -2,7 +2,6 @@ package peripherals
 
 import (
 	"github.com/vistormu/go-berry/comms"
-	"github.com/vistormu/go-dsa/math"
 )
 
 type StepMotor17hs4401 struct {
@@ -34,8 +33,8 @@ func NewStepMotor17hs4401(stepPinNo, directionPinNo, minFreq, maxFreq int) (*Ste
 }
 
 func (m *StepMotor17hs4401) Write(value float64) error {
-	speed := math.Clip(int(value), -100, 100)
-	frequency := math.MapInterval(math.Abs(speed), 0, 100, m.minFreq, m.maxFreq)
+	speed := int(max(-100, min(value, 100)))
+	frequency := remap(speed, 0, 100, m.minFreq, m.maxFreq)
 
 	var err error
 	if speed == 0 {
@@ -79,4 +78,13 @@ func (m *StepMotor17hs4401) Close() error {
 	}
 
 	return nil
+}
+
+func remap(v, inMin, inMax, outMin, outMax int) int {
+	if inMin == inMax {
+		return outMin
+	}
+	inRange := inMax - inMin
+	outRange := outMax - outMin
+	return (v-inMin)*outRange/inRange + outMin
 }
