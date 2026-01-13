@@ -2,6 +2,7 @@ package peripherals
 
 import (
 	"github.com/vistormu/go-berry/comms"
+	"math"
 )
 
 type StepMotor17hs4401 struct {
@@ -33,31 +34,32 @@ func NewStepMotor17hs4401(stepPinNo, directionPinNo, minFreq, maxFreq int) (*Ste
 }
 
 func (m *StepMotor17hs4401) Write(value float64) error {
-	speed := int(max(-100, min(value, 100)))
-	frequency := remap(speed, 0, 100, m.minFreq, m.maxFreq)
+	speed := int(math.Round(max(-100, min(value, 100))))
 
-	var err error
+	// stop
 	if speed == 0 {
-		err = m.pwm.Write(0)
-		if err != nil {
+		if err := m.pwm.Write(0); err != nil {
 			return err
 		}
+		return nil
 	}
 
+	// direction by sign
 	if speed > 0 {
-		err = m.direction.Write(comms.Low)
-		if err != nil {
+		if err := m.direction.Write(comms.Low); err != nil {
 			return err
 		}
 	} else {
-		err = m.direction.Write(comms.High)
-		if err != nil {
+		if err := m.direction.Write(comms.High); err != nil {
 			return err
 		}
 	}
 
+	// frequency
+	mag := int(math.Abs(float64(speed)))
+	frequency := remap(mag, 0, 100, m.minFreq, m.maxFreq)
 	m.pwm.SetFrequency(frequency)
-	err = m.pwm.Write(50)
+	err := m.pwm.Write(50)
 	if err != nil {
 		return err
 	}
