@@ -175,9 +175,9 @@ func (s *Tle493d) read() (float64, float64, error) {
 	}
 
 	bxTop := s.get("bxTop")
-	bxBot := s.get("bxBot")
+	bxBot := s.get("bxBottom")
 	byTop := s.get("byTop")
-	byBot := s.get("byBot")
+	byBot := s.get("byBottom")
 
 	bx := combine(bxTop, bxBot)
 	by := combine(byTop, byBot)
